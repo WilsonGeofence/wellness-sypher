@@ -73,12 +73,14 @@ const Auth = () => {
     setErrorMessage(null);
     
     try {
-      console.log("Starting Google sign-in with redirectTo:", `${window.location.origin}/`);
+      // Define the redirect URL
+      const redirectUrl = `${window.location.origin}/`;
+      console.log("Starting Google sign-in with redirectTo:", redirectUrl);
       
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: redirectUrl,
           queryParams: {
             prompt: 'select_account',
             access_type: 'offline',
@@ -91,7 +93,7 @@ const Auth = () => {
         throw error;
       }
       
-      console.log("Google sign-in initiated successfully");
+      console.log("Google sign-in initiated successfully", data);
       // The OAuth flow will handle the redirect automatically
     } catch (error: any) {
       console.error("Failed to initiate Google sign-in:", error);
