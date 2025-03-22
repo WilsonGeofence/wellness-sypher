@@ -122,7 +122,12 @@ const Index = () => {
         });
       }
     } else {
-      newHealthData[category].push(newEntry as any);
+      const entry = {
+        value: value as number,
+        time: new Date(),
+      };
+      
+      newHealthData[category].push(entry as any);
     }
 
     setHealthData(newHealthData);
