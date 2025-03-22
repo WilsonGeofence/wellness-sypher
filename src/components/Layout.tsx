@@ -3,10 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import Header from './navigation/Header';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const pathname = window.location.pathname;
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   
   const [user, setUser] = useState<any>(null);
 
