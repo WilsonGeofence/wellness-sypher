@@ -4,6 +4,7 @@ import HealthMetricCard from '../components/HealthMetricCard';
 import HealthScore from '../components/HealthScore';
 import InsightCard from '../components/InsightCard';
 import WelcomeModal from '../components/WelcomeModal';
+import { Button } from '@/components/ui/button';
 import { 
   Moon, 
   Activity, 
@@ -21,6 +22,7 @@ import {
 } from '../utils/healthUtils';
 import { UserData } from '../types/chat';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 const Index = () => {
   const [healthData, setHealthData] = useState<HealthData | null>(null);
@@ -30,15 +32,30 @@ const Index = () => {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+  const [user, setUser] = useState<any>(null);
 
   const today = new Date();
   const formattedDate = formatDate(today, 'long');
 
   useEffect(() => {
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    // Check if we have user data stored
     const savedUserData = localStorage.getItem('userData');
-    if (!savedUserData) {
+    if (!savedUserData && user) {
+      // If we have a logged in user but no user data, show the welcome modal
       setShowWelcomeModal(true);
-    } else {
+    } else if (savedUserData) {
       setUserData(JSON.parse(savedUserData));
     }
 
@@ -61,8 +78,8 @@ const Index = () => {
       setIsLoading(false);
     }, 500);
 
-    return () => clearTimeout(timer);
-  }, []);
+    return () => subscription.unsubscribe();
+  }, [user]);
 
   useEffect(() => {
     if (healthData) {
@@ -152,11 +169,22 @@ const Index = () => {
       <div className="p-6 max-w-6xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-sypher-black animate-fade-in-up">
-            {userData ? `Hello, ${userData.name}` : 'Welcome to Sypher'}
+            {userData ? `Hello, ${userData.name}` : user ? 'Welcome to Sypher' : 'Welcome to Sypher'}
           </h1>
           <p className="text-sypher-gray-dark mt-1 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
             {formattedDate}
           </p>
+          {!user && (
+            <div className="mt-4 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+              <Button 
+                variant="default" 
+                onClick={() => navigate('/auth')}
+                className="bg-sypher-blue text-white"
+              >
+                Sign in to track your health
+              </Button>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
