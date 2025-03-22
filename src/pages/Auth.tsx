@@ -73,18 +73,20 @@ const Auth = () => {
     setErrorMessage(null);
     
     try {
+      // Fix Google sign-in by ensuring proper redirect configuration
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: window.location.origin,
           queryParams: {
             prompt: 'select_account',
+            access_type: 'offline',
           }
         }
       });
 
       if (error) throw error;
-      // No need to navigate here, the OAuth flow will handle the redirect
+      // The OAuth flow will handle the redirect automatically
     } catch (error: any) {
       setErrorMessage(error.message || "An error occurred during Google authentication");
       setLoading(false);
