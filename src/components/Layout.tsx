@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AlignRight, X, Home, MessageSquare, PieChart, Target, LogIn, LogOut, UserCircle } from 'lucide-react';
-import { useMobile } from '../hooks/use-mobile';
+import { useIsMobile } from '../hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 
 interface NavLinkProps {
