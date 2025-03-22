@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 
 interface GoogleAuthButtonProps {
   disabled?: boolean;
@@ -16,15 +17,15 @@ const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({ disabled = false })
     setLoading(true);
     
     try {
-      // Get the current URL for the redirect
-      const redirectUrl = window.location.origin;
-      console.log("Starting Google sign-in with redirectTo:", redirectUrl);
+      // Get the current URL for the redirect - use exact origin without trailing slash
+      const origin = window.location.origin;
+      console.log("Starting Google sign-in with origin:", origin);
       
       // Use signInWithOAuth with Google provider
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectUrl,
+          redirectTo: origin, // Use exact origin without path
           queryParams: {
             // Force account selection to prevent automatic sign-in with the last used account
             prompt: 'select_account',
@@ -39,7 +40,7 @@ const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({ disabled = false })
           description: error.message || "There was a problem signing in with Google",
           variant: "destructive"
         });
-        throw error;
+        return;
       }
       
       console.log("Google sign-in initiated successfully", data);
@@ -65,15 +66,20 @@ const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({ disabled = false })
         disabled={disabled || loading}
       >
         {loading ? (
-          <span className="mr-2">Loading...</span>
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <span>Please wait...</span>
+          </>
         ) : (
-          <img 
-            src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" 
-            alt="Google" 
-            className="mr-2 h-5 w-5" 
-          />
+          <>
+            <img 
+              src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" 
+              alt="Google" 
+              className="mr-2 h-5 w-5" 
+            />
+            <span>Continue with Google</span>
+          </>
         )}
-        {loading ? "Please wait..." : "Continue with Google"}
       </Button>
     </div>
   );

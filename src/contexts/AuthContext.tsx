@@ -34,6 +34,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       (event, session) => {
         console.log("Auth state changed:", event, session?.user?.email);
         
+        if (event === 'SIGNED_IN' && session?.user) {
+          console.log("User successfully signed in:", session.user.email);
+        } else if (event === 'SIGNED_OUT') {
+          console.log("User signed out");
+        } else if (event === 'TOKEN_REFRESHED') {
+          console.log("Auth token refreshed");
+        } else if (event === 'USER_UPDATED') {
+          console.log("User information updated");
+        }
+        
         // Update state based on auth events
         setSession(session);
         setUser(session?.user ?? null);
@@ -50,8 +60,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             title: "Signed out",
             description: "You have been signed out successfully"
           });
-        } else if (event === 'TOKEN_REFRESHED') {
-          console.log("Auth token refreshed");
         }
       }
     );
