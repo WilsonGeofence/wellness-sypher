@@ -13,6 +13,7 @@ const Chat = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   // Parse query parameters to check if a topic was passed
   useEffect(() => {
@@ -95,10 +96,27 @@ const Chat = () => {
         return "I apologize, but I received an unexpected response format. Please try again.";
       }
 
+      // Reset retry count on successful response
+      setRetryCount(0);
       return data.response;
     } catch (error) {
       console.error('Error in handleSendMessage:', error);
-      setError('An unexpected error occurred.');
+      
+      // Increment retry count
+      setRetryCount(prev => prev + 1);
+      
+      if (retryCount >= 2) {
+        // After 2 retries, provide a more specific message
+        setError('Service is currently unavailable. Please try again later.');
+        toast({
+          title: "Service Unavailable",
+          description: "Our AI assistant is experiencing high demand. Please try again later.",
+          variant: "destructive"
+        });
+      } else {
+        setError('An unexpected error occurred.');
+      }
+      
       return "I apologize, but I'm having trouble connecting to my knowledge base right now. Please try again in a moment.";
     } finally {
       setIsProcessing(false);
