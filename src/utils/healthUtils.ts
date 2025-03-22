@@ -1,3 +1,4 @@
+
 // Define types for health data
 export type HealthData = {
   sleep: {
@@ -25,28 +26,6 @@ export type HealthData = {
     notes: string;
     time: Date;
   }[];
-};
-
-// Define type for User Data
-export type UserData = {
-  name: string;
-  age?: number;
-  gender?: string;
-  healthGoals?: string[];
-  [key: string]: any;
-};
-
-// Define type for Goal
-export type Goal = {
-  id: string;
-  title: string;
-  description: string;
-  target: number;
-  current: number;
-  unit: string;
-  category: 'sleep' | 'activity' | 'diet' | 'stress' | 'other';
-  createdAt: Date;
-  completedAt?: Date;
 };
 
 // Filter data by date range
