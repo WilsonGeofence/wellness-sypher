@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AlignRight, X, Home, MessageSquare, PieChart, Target, LogIn, LogOut } from 'lucide-react';
+import { AlignRight, X, Home, MessageSquare, PieChart, Target, LogIn, LogOut, UserCircle } from 'lucide-react';
 import { useMobile } from '../hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -125,13 +126,19 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               </NavLink>
               
               {user ? (
-                <button 
-                  onClick={handleSignOut}
-                  className="ml-4 px-4 py-2 text-sm bg-red-100 text-red-600 rounded-md hover:bg-red-200 transition-colors flex items-center"
-                >
-                  <LogOut size={16} className="mr-1" />
-                  Sign Out
-                </button>
+                <>
+                  <NavLink to="/profile" active={pathname === '/profile'}>
+                    <UserCircle size={20} />
+                    <span>Profile</span>
+                  </NavLink>
+                  <button 
+                    onClick={handleSignOut}
+                    className="ml-4 px-4 py-2 text-sm bg-red-100 text-red-600 rounded-md hover:bg-red-200 transition-colors flex items-center"
+                  >
+                    <LogOut size={16} className="mr-1" />
+                    Sign Out
+                  </button>
+                </>
               ) : (
                 <NavLink to="/auth" active={pathname === '/auth'}>
                   <LogIn size={20} />
@@ -162,16 +169,22 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               </MobileNavLink>
               
               {user ? (
-                <button 
-                  onClick={() => {
-                    handleSignOut();
-                    setIsOpen(false);
-                  }}
-                  className="mt-4 px-4 py-3 text-sm bg-red-100 text-red-600 rounded-md hover:bg-red-200 transition-colors flex items-center"
-                >
-                  <LogOut size={16} className="mr-1" />
-                  Sign Out
-                </button>
+                <>
+                  <MobileNavLink to="/profile" setIsOpen={setIsOpen} active={pathname === '/profile'}>
+                    <UserCircle size={20} />
+                    <span>Profile</span>
+                  </MobileNavLink>
+                  <button 
+                    onClick={() => {
+                      handleSignOut();
+                      setIsOpen(false);
+                    }}
+                    className="mt-4 px-4 py-3 text-sm bg-red-100 text-red-600 rounded-md hover:bg-red-200 transition-colors flex items-center"
+                  >
+                    <LogOut size={16} className="mr-1" />
+                    Sign Out
+                  </button>
+                </>
               ) : (
                 <MobileNavLink to="/auth" setIsOpen={setIsOpen} active={pathname === '/auth'}>
                   <LogIn size={20} />

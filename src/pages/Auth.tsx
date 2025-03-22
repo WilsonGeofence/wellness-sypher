@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Mail, Lock, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -16,29 +17,14 @@ const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
-    // Check if user is already logged in
-    const checkUser = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        navigate('/');
-      }
-    };
-    
-    checkUser();
-
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (session) {
-          navigate('/');
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    // Redirect if already logged in
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,6 +55,11 @@ const Auth = () => {
         });
 
         if (error) throw error;
+        toast({
+          title: "Signed in successfully",
+          description: "Welcome back!"
+        });
+        navigate('/');
       }
     } catch (error: any) {
       setErrorMessage(error.message || "An error occurred during authentication");

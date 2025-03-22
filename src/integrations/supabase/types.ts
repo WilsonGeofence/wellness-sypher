@@ -12,14 +12,17 @@ export type Database = {
       Sypher2: {
         Row: {
           created_at: string
+          created_by: string
           id: number
         }
         Insert: {
           created_at?: string
+          created_by?: string
           id?: number
         }
         Update: {
           created_at?: string
+          created_by?: string
           id?: number
         }
         Relationships: []
