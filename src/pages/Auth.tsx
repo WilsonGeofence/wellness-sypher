@@ -38,7 +38,7 @@ const Auth = () => {
           email,
           password,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: `${window.location.origin}/`,
           }
         });
 
@@ -76,11 +76,15 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`
+          redirectTo: `${window.location.origin}/`,
+          queryParams: {
+            prompt: 'select_account',
+          }
         }
       });
 
       if (error) throw error;
+      // No need to navigate here, the OAuth flow will handle the redirect
     } catch (error: any) {
       setErrorMessage(error.message || "An error occurred during Google authentication");
       setLoading(false);
