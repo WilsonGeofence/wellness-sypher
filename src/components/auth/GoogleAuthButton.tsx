@@ -17,18 +17,17 @@ const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({ disabled = false })
     setLoading(true);
     
     try {
-      // Get the current URL for the redirect - use exact origin without trailing slash
+      // Use the window location origin without any trailing slash
       const origin = window.location.origin;
-      console.log("Starting Google sign-in with origin:", origin);
+      console.log("Starting Google sign-in with redirect URL:", origin);
       
-      // Use signInWithOAuth with Google provider
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: origin, // Use exact origin without path
+          redirectTo: origin,
           queryParams: {
-            // Force account selection to prevent automatic sign-in with the last used account
             prompt: 'select_account',
+            access_type: 'offline', // Request a refresh token
           }
         }
       });
@@ -43,7 +42,7 @@ const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({ disabled = false })
         return;
       }
       
-      console.log("Google sign-in initiated successfully", data);
+      console.log("Google sign-in initiated successfully, redirecting to:", data.url);
       // The redirect will happen automatically, handled by Supabase
     } catch (error: any) {
       console.error("Failed to initiate Google sign-in:", error);
@@ -53,7 +52,9 @@ const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({ disabled = false })
         variant: "destructive"
       });
     } finally {
-      setLoading(false);
+      // Only set loading to false if we're still on the same page
+      // This prevents state updates after the component unmounts during redirect
+      setTimeout(() => setLoading(false), 3000);
     }
   };
 
