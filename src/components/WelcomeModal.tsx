@@ -1,22 +1,11 @@
-
 import React, { useState } from 'react';
 import { X, ChevronRight, ChevronLeft } from 'lucide-react';
+import { UserData } from '../types/chat';
 
 type WelcomeModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onComplete: (userData: UserData) => void;
-};
-
-export type UserData = {
-  name: string;
-  age: number;
-  gender: string;
-  height: number;
-  weight: number;
-  primaryGoal: string;
-  sleepGoal: number;
-  activityGoal: number;
 };
 
 const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose, onComplete }) => {

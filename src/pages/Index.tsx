@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import HealthMetricCard from '../components/HealthMetricCard';
@@ -18,9 +17,9 @@ import {
   calculateHealthScore, 
   generateInsights, 
   formatDate,
-  type HealthData,
-  type UserData
+  type HealthData
 } from '../utils/healthUtils';
+import { UserData } from '../types/chat';
 import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
@@ -35,21 +34,17 @@ const Index = () => {
   const today = new Date();
   const formattedDate = formatDate(today, 'long');
 
-  // Check if this is the first visit
   useEffect(() => {
     const savedUserData = localStorage.getItem('userData');
     if (!savedUserData) {
-      // First time user
       setShowWelcomeModal(true);
     } else {
       setUserData(JSON.parse(savedUserData));
     }
 
-    // Load health data
     const savedHealthData = localStorage.getItem('healthData');
     if (savedHealthData) {
       const parsedData = JSON.parse(savedHealthData, (key, value) => {
-        // Convert date strings back to Date objects
         if (key === 'time' && typeof value === 'string') {
           return new Date(value);
         }
@@ -57,13 +52,11 @@ const Index = () => {
       });
       setHealthData(parsedData);
     } else {
-      // Generate mock data for first-time users
       const mockData = generateMockHealthData();
       setHealthData(mockData);
       localStorage.setItem('healthData', JSON.stringify(mockData));
     }
 
-    // Simulate loading
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 500);
@@ -71,7 +64,6 @@ const Index = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Calculate health score and insights when health data changes
   useEffect(() => {
     if (healthData) {
       const score = calculateHealthScore(healthData);
@@ -82,9 +74,9 @@ const Index = () => {
     }
   }, [healthData]);
 
-  const handleOnboardingComplete = (data: UserData) => {
-    setUserData(data);
-    localStorage.setItem('userData', JSON.stringify(data));
+  const handleOnboardingComplete = (userData: UserData) => {
+    setUserData(userData);
+    localStorage.setItem('userData', JSON.stringify(userData));
     setShowWelcomeModal(false);
   };
 
@@ -93,15 +85,7 @@ const Index = () => {
 
     const newHealthData = { ...healthData };
 
-    // Add a new entry for today
-    const newEntry = {
-      [field]: value,
-      time: new Date()
-    };
-
-    // Different handling for diet since it has a nested structure
     if (category === 'diet' && field === 'water') {
-      // Find today's entry or create a new one
       const todayEntry = newHealthData.diet.find(
         item => formatDate(item.time, 'short') === formatDate(new Date(), 'short')
       );
@@ -116,7 +100,6 @@ const Index = () => {
         });
       }
     } else if (category === 'diet' && field === 'mealQuality') {
-      // Find today's entry or create a new one
       const todayEntry = newHealthData.diet.find(
         item => formatDate(item.time, 'short') === formatDate(new Date(), 'short')
       );
@@ -139,7 +122,6 @@ const Index = () => {
         });
       }
     } else {
-      // For sleep, activity, and stress
       newHealthData[category].push(newEntry as any);
     }
 
@@ -163,7 +145,6 @@ const Index = () => {
   return (
     <Layout>
       <div className="p-6 max-w-6xl mx-auto">
-        {/* Welcome and Date */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-sypher-black animate-fade-in-up">
             {userData ? `Hello, ${userData.name}` : 'Welcome to Sypher'}
@@ -173,7 +154,6 @@ const Index = () => {
           </p>
         </div>
 
-        {/* Health Score and Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="md:col-span-1 flex justify-center glass-card p-6 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
             <HealthScore score={healthScore} size="lg" />
@@ -214,7 +194,6 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Health Metrics */}
         <h2 className="text-xl font-semibold text-sypher-black mb-4 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
           Today's Health Metrics
         </h2>
@@ -266,7 +245,6 @@ const Index = () => {
           />
         </div>
 
-        {/* Insights */}
         <div className="flex justify-between items-center mb-4 animate-fade-in-up" style={{ animationDelay: '500ms' }}>
           <h2 className="text-xl font-semibold text-sypher-black">Your AI Insights</h2>
           <button 
@@ -291,7 +269,6 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Welcome Modal */}
       <WelcomeModal
         isOpen={showWelcomeModal}
         onClose={() => setShowWelcomeModal(false)}
