@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import ChatHeader from './chat/ChatHeader';
 import ChatMessage from './chat/ChatMessage';
@@ -8,6 +9,7 @@ import { Message } from '../types/chat';
 type ChatInterfaceProps = {
   onSendMessage?: (message: string) => Promise<string>;
   suggestions?: string[];
+  isProcessing?: boolean;
 };
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ 
@@ -17,7 +19,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     "What are good stress reduction techniques?",
     "Give me a quick 10-minute workout",
     "Tips for healthy eating habits"
-  ]
+  ],
+  isProcessing = false
 }) => {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -28,8 +31,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   ]);
   const [inputValue, setInputValue] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Update internal loading state when prop changes
+  useEffect(() => {
+    setLoading(isProcessing);
+  }, [isProcessing]);
 
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
@@ -44,7 +52,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const generateId = () => Math.random().toString(36).substring(2, 11);
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim()) return;
+    if (!inputValue.trim() || loading) return;
 
     const userMessage: Message = {
       id: generateId(),
@@ -55,7 +63,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
-    setIsLoading(true);
+    setLoading(true);
 
     try {
       let aiResponse = "I'm processing your request...";
@@ -84,7 +92,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       setMessages(prev => [...prev, errorMessage]);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -101,7 +109,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           {messages.map(message => (
             <ChatMessage key={message.id} message={message} />
           ))}
-          {isLoading && (
+          {loading && (
             <div className="flex justify-start">
               <div className="bg-white text-sypher-black rounded-2xl rounded-tl-none px-4 py-3 max-w-[80%] animate-pulse">
                 <div className="flex space-x-2">
@@ -127,7 +135,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         inputValue={inputValue}
         setInputValue={setInputValue}
         handleSendMessage={handleSendMessage}
-        isLoading={isLoading}
+        isLoading={loading}
       />
     </div>
   );

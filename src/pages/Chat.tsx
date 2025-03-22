@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import ChatInterface from '../components/ChatInterface';
@@ -11,6 +12,7 @@ const Chat = () => {
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Parse query parameters to check if a topic was passed
   useEffect(() => {
@@ -65,7 +67,11 @@ const Chat = () => {
   // Real LLM chat response handler
   const handleSendMessage = async (message: string): Promise<string> => {
     setIsProcessing(true);
+    setError(null);
+    
     try {
+      console.log('Sending message to AI:', message);
+      
       // Call our Supabase Edge Function
       const { data, error } = await supabase.functions.invoke('chat-ai', {
         body: { message },
@@ -73,6 +79,7 @@ const Chat = () => {
 
       if (error) {
         console.error('Error calling AI function:', error);
+        setError('Failed to get a response. Please try again.');
         toast({
           title: "Error",
           description: "Failed to get a response from the AI assistant.",
@@ -81,9 +88,17 @@ const Chat = () => {
         return "I'm sorry, I encountered an error processing your request. Please try again later.";
       }
 
+      console.log('Received AI response:', data);
+      
+      if (!data || !data.response) {
+        setError('Received an invalid response format.');
+        return "I apologize, but I received an unexpected response format. Please try again.";
+      }
+
       return data.response;
     } catch (error) {
       console.error('Error in handleSendMessage:', error);
+      setError('An unexpected error occurred.');
       return "I apologize, but I'm having trouble connecting to my knowledge base right now. Please try again in a moment.";
     } finally {
       setIsProcessing(false);
@@ -107,11 +122,24 @@ const Chat = () => {
     <Layout>
       <div className="p-4 max-w-md mx-auto h-[calc(100vh-4rem)]">
         <div className="flex flex-col h-full">
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+              {error}
+              <button 
+                className="ml-2 underline" 
+                onClick={() => setError(null)}
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+          
           {/* Chat Interface */}
           <div className="flex-1">
             <ChatInterface 
               onSendMessage={handleSendMessage}
               suggestions={selectedTopic ? topicSuggestions[selectedTopic] : topicSuggestions.general}
+              isProcessing={isProcessing}
             />
           </div>
         </div>
