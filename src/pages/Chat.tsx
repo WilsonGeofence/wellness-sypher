@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import ChatInterface from '../components/ChatInterface';
 import { useLocation } from 'react-router-dom';
-import { Sparkles, Lightbulb, Moon, Heart, Activity, Utensils } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 const Chat = () => {
   const location = useLocation();
@@ -47,14 +47,14 @@ const Chat = () => {
       "How many minutes of activity should I aim for daily?"
     ],
     diet: [
+      "Can you help me generate a meal plan?",
       "What foods help improve energy levels?",
       "How much water should I drink each day?",
-      "What's a balanced meal plan look like?",
       "How can I reduce sugar cravings?"
     ],
     general: [
       "How can I improve my overall wellness?",
-      "What lifestyle changes would have the biggest impact?",
+      "I am diabetic. I need advice on how to manage daily issues",
       "How do sleep, diet, and exercise affect each other?",
       "Tips for building healthy habits"
     ]
@@ -64,6 +64,37 @@ const Chat = () => {
   const handleSendMessage = async (message: string): Promise<string> => {
     // Simulate AI processing time
     await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
+    
+    // Mock meal plan response
+    if (message.toLowerCase().includes('meal plan') || message.toLowerCase().includes('generate a meal')) {
+      return `
+Breakfast
+300 Calories
+[Image of a breakfast with yogurt and berries]
+
+Lunch
+300 Calories
+[Image of a salad with fresh vegetables]
+
+Dinner
+350 Calories
+Chicken stir fry
+[Image of a chicken stir fry with vegetables]
+
+Total intake of calorie per day is 1050. Would you like me to adjust any meals or snacks?
+      `;
+    }
+    
+    // Mock diabetes response
+    if (message.toLowerCase().includes('diabetic')) {
+      return `
+Managing diabetes requires a balanced approach to nutrition and exercise. Focus on eating whole, unprocessed foods with a good mix of fiber, healthy fats, and lean protein to help regulate blood sugar. Avoid refined carbs and sugary foods that can cause spikes.
+
+For exercise, regular movement is key—aim for a mix of strength training and light cardio, like walking, to improve insulin sensitivity. Managing stress and getting enough sleep also play a big role in blood sugar control.
+
+Would you like recommendations based on your lifestyle and daily routine?
+      `;
+    }
     
     // Basic keyword matching for demo purposes
     if (message.toLowerCase().includes('sleep')) {
@@ -76,7 +107,7 @@ const Chat = () => {
       return "A balanced diet is crucial for maintaining good health. Focus on whole foods, plenty of vegetables and fruits, lean proteins, and healthy fats. Stay hydrated by drinking water throughout the day. Consider eating smaller, more frequent meals to maintain steady energy levels.";
     }
     
-    return "I'm here to help you achieve your health and wellness goals. Feel free to ask specific questions about sleep, stress, physical activity, diet, or any other health-related topics. I can provide personalized recommendations based on your needs and circumstances.";
+    return "Hi! I'm Sypher, your AI personal health assistant. I'm here to help you achieve your health and wellness goals. Feel free to ask specific questions about sleep, stress, physical activity, diet, or any other health-related topics. I can provide personalized recommendations based on your needs and circumstances.";
   };
 
   if (isLoading) {
@@ -94,45 +125,10 @@ const Chat = () => {
 
   return (
     <Layout>
-      <div className="p-6 max-w-6xl mx-auto">
-        <div className="flex flex-col h-[calc(100vh-8rem)]">
-          {/* Page Header */}
-          <div className="mb-6 animate-fade-in-up">
-            <div className="flex items-center">
-              <Sparkles size={24} className="text-sypher-blue-accent mr-3" />
-              <h1 className="text-3xl font-bold text-sypher-black">AI Health Assistant</h1>
-            </div>
-            <p className="text-sypher-gray-dark mt-1 ml-9">
-              Ask me anything about your health and wellness journey
-            </p>
-          </div>
-
-          {/* Topic Selection */}
-          {!selectedTopic && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-              {[
-                { id: 'general', label: 'General Wellness', icon: <Lightbulb /> },
-                { id: 'sleep', label: 'Sleep', icon: <Moon /> },
-                { id: 'stress', label: 'Stress', icon: <Heart /> },
-                { id: 'activity', label: 'Physical Activity', icon: <Activity /> },
-                { id: 'diet', label: 'Diet & Nutrition', icon: <Utensils /> },
-              ].map(topic => (
-                <button
-                  key={topic.id}
-                  onClick={() => setSelectedTopic(topic.id)}
-                  className={`flex items-center p-4 rounded-xl neo-button space-x-3 ${
-                    selectedTopic === topic.id ? 'bg-sypher-blue text-sypher-blue-dark' : ''
-                  }`}
-                >
-                  <span className="text-sypher-blue-accent">{topic.icon}</span>
-                  <span>{topic.label}</span>
-                </button>
-              ))}
-            </div>
-          )}
-
+      <div className="p-4 max-w-md mx-auto h-[calc(100vh-4rem)]">
+        <div className="flex flex-col h-full">
           {/* Chat Interface */}
-          <div className="flex-1 animate-fade-in-up">
+          <div className="flex-1">
             <ChatInterface 
               onSendMessage={handleSendMessage}
               suggestions={selectedTopic ? topicSuggestions[selectedTopic] : topicSuggestions.general}
