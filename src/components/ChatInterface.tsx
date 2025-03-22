@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import ChatHeader from './chat/ChatHeader';
 import ChatMessage from './chat/ChatMessage';
@@ -59,14 +58,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     setIsLoading(true);
 
     try {
-      let aiResponse = "I'm processing your request. Give me a moment...";
+      let aiResponse = "I'm processing your request...";
       
       if (onSendMessage) {
         aiResponse = await onSendMessage(inputValue);
       }
-
-      // Simulate typing delay even when function returns immediately
-      await new Promise(resolve => setTimeout(resolve, 500));
 
       const aiMessage: Message = {
         id: generateId(),

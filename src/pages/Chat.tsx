@@ -1,14 +1,16 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import ChatInterface from '../components/ChatInterface';
 import { useLocation } from 'react-router-dom';
-import { Sparkles } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const Chat = () => {
   const location = useLocation();
+  const { toast } = useToast();
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Parse query parameters to check if a topic was passed
   useEffect(() => {
@@ -26,7 +28,7 @@ const Chat = () => {
     return () => clearTimeout(timer);
   }, [location]);
 
-  // Mock chat suggestions based on topics
+  // Chat suggestions based on topics
   const topicSuggestions: Record<string, string[]> = {
     sleep: [
       "How can I improve my sleep quality?",
@@ -60,54 +62,32 @@ const Chat = () => {
     ]
   };
 
-  // Mock chat response handler
+  // Real LLM chat response handler
   const handleSendMessage = async (message: string): Promise<string> => {
-    // Simulate AI processing time
-    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
-    
-    // Mock meal plan response
-    if (message.toLowerCase().includes('meal plan') || message.toLowerCase().includes('generate a meal')) {
-      return `
-Breakfast
-300 Calories
-[Image of a breakfast with yogurt and berries]
+    setIsProcessing(true);
+    try {
+      // Call our Supabase Edge Function
+      const { data, error } = await supabase.functions.invoke('chat-ai', {
+        body: { message },
+      });
 
-Lunch
-300 Calories
-[Image of a salad with fresh vegetables]
+      if (error) {
+        console.error('Error calling AI function:', error);
+        toast({
+          title: "Error",
+          description: "Failed to get a response from the AI assistant.",
+          variant: "destructive"
+        });
+        return "I'm sorry, I encountered an error processing your request. Please try again later.";
+      }
 
-Dinner
-350 Calories
-Chicken stir fry
-[Image of a chicken stir fry with vegetables]
-
-Total intake of calorie per day is 1050. Would you like me to adjust any meals or snacks?
-      `;
+      return data.response;
+    } catch (error) {
+      console.error('Error in handleSendMessage:', error);
+      return "I apologize, but I'm having trouble connecting to my knowledge base right now. Please try again in a moment.";
+    } finally {
+      setIsProcessing(false);
     }
-    
-    // Mock diabetes response
-    if (message.toLowerCase().includes('diabetic')) {
-      return `
-Managing diabetes requires a balanced approach to nutrition and exercise. Focus on eating whole, unprocessed foods with a good mix of fiber, healthy fats, and lean protein to help regulate blood sugar. Avoid refined carbs and sugary foods that can cause spikes.
-
-For exercise, regular movement is key—aim for a mix of strength training and light cardio, like walking, to improve insulin sensitivity. Managing stress and getting enough sleep also play a big role in blood sugar control.
-
-Would you like recommendations based on your lifestyle and daily routine?
-      `;
-    }
-    
-    // Basic keyword matching for demo purposes
-    if (message.toLowerCase().includes('sleep')) {
-      return "Good sleep is essential for overall health. For better sleep quality, try to maintain a consistent sleep schedule, keep your bedroom cool and dark, avoid screens 1 hour before bedtime, and limit caffeine in the afternoon. Most adults need 7-9 hours of quality sleep per night.";
-    } else if (message.toLowerCase().includes('stress')) {
-      return "Managing stress is key to both mental and physical health. Try incorporating deep breathing exercises, regular physical activity, and mindfulness meditation into your routine. Even just 5 minutes of focused breathing can help reduce acute stress. Remember that adequate sleep and proper nutrition also play important roles in stress management.";
-    } else if (message.toLowerCase().includes('exercise') || message.toLowerCase().includes('activity')) {
-      return "Regular physical activity has countless benefits for your health. Even moderate activity like a 30-minute daily walk can significantly improve your health outcomes. Try to include both cardiovascular exercise and strength training in your routine. Start slow and gradually build up intensity and duration.";
-    } else if (message.toLowerCase().includes('diet') || message.toLowerCase().includes('food')) {
-      return "A balanced diet is crucial for maintaining good health. Focus on whole foods, plenty of vegetables and fruits, lean proteins, and healthy fats. Stay hydrated by drinking water throughout the day. Consider eating smaller, more frequent meals to maintain steady energy levels.";
-    }
-    
-    return "Hi! I'm Sypher, your AI personal health assistant. I'm here to help you achieve your health and wellness goals. Feel free to ask specific questions about sleep, stress, physical activity, diet, or any other health-related topics. I can provide personalized recommendations based on your needs and circumstances.";
   };
 
   if (isLoading) {
