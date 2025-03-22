@@ -1,4 +1,3 @@
-
 // Define types for health data
 export type HealthData = {
   sleep: {
@@ -26,6 +25,15 @@ export type HealthData = {
     notes: string;
     time: Date;
   }[];
+};
+
+// Add the missing UserData type
+export type UserData = {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+  // Add any other properties needed
 };
 
 // Filter data by date range
