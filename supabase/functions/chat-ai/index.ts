@@ -24,9 +24,17 @@ serve(async (req) => {
 
     console.log('Received message:', message);
 
+    // Check if the API key exists and log more detailed information
     if (!openAIApiKey) {
-      console.error('OpenAI API key not found');
-      throw new Error('OpenAI API key not configured');
+      console.error('OpenAI API key not found in environment variables');
+      
+      // Return a specific response for missing API key
+      return new Response(JSON.stringify({ 
+        response: "I'm sorry, but I can't connect to my knowledge base right now. The system administrator needs to set up the OpenAI API key. In the meantime, please remember that consistent monitoring of blood glucose levels, staying hydrated, and maintaining a balanced diet are key aspects of diabetes management." 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200 // Return 200 to avoid frontend errors
+      });
     }
 
     try {
@@ -62,7 +70,7 @@ serve(async (req) => {
           });
         }
         
-        throw new Error(`OpenAI API error: ${response.status}`);
+        throw new Error(`OpenAI API error: ${response.status} - ${errorData}`);
       }
 
       const data = await response.json();
