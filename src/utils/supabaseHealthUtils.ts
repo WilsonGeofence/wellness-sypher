@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { formatDate, type HealthData } from './healthUtils';
 
@@ -290,4 +291,3 @@ export const importPAMAP2Dataset = async (): Promise<boolean> => {
     return false;
   }
 };
-
