@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import TrendChart from '../components/TrendChart';
@@ -42,6 +41,22 @@ const Insights = () => {
     { id: 'activity', label: 'Activity', icon: <Activity size={18} /> },
     { id: 'stress', label: 'Stress', icon: <Heart size={18} /> },
   ];
+  
+  // Handle insight card action - fix by using useNavigate instead of direct window.location
+  const handleInsightAction = (topic: string) => {
+    const queryString = new URLSearchParams({
+      topic: topic.toLowerCase().includes('sleep') 
+        ? 'sleep' 
+        : topic.toLowerCase().includes('stress')
+        ? 'stress'
+        : topic.toLowerCase().includes('activity')
+        ? 'activity'
+        : 'general'
+    }).toString();
+    
+    // Use navigate instead of directly changing window.location
+    navigate(`/chat?${queryString}`);
+  };
 
   // Load health data from Supabase
   useEffect(() => {
@@ -318,19 +333,7 @@ const Insights = () => {
                     description={insight.description}
                     type={insight.type}
                     actionText={insight.type === 'warning' ? "Learn How to Improve" : "Learn More"}
-                    onAction={() => {
-                      // Navigate to chat with a pre-filled question
-                      const queryString = new URLSearchParams({
-                        topic: insight.title.toLowerCase().includes('sleep') 
-                          ? 'sleep' 
-                          : insight.title.toLowerCase().includes('stress')
-                          ? 'stress'
-                          : insight.title.toLowerCase().includes('activity')
-                          ? 'activity'
-                          : 'general'
-                      }).toString();
-                      window.location.href = `/chat?${queryString}`;
-                    }}
+                    onAction={() => handleInsightAction(insight.title)}
                   />
                 </div>
               ))}
