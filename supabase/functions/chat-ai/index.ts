@@ -45,7 +45,6 @@ serve(async (req) => {
           body: JSON.stringify({
             contents: [
               {
-                role: "user",
                 parts: [{ text: "Hello, this is a test message." }]
               }
             ],
@@ -138,12 +137,9 @@ serve(async (req) => {
         body: JSON.stringify({
           contents: [
             {
-              role: "system",
-              parts: [{ text: "You are Sypher, a health and wellness AI assistant. Provide helpful, concise advice about sleep, nutrition, exercise, and stress management. Your responses should be friendly, evidence-based, and focused on promoting overall wellbeing. Limit responses to 2-3 paragraphs at most." }]
-            },
-            {
-              role: "user",
-              parts: [{ text: message }]
+              parts: [{ 
+                text: "You are Sypher, a health and wellness AI assistant. Provide helpful, concise advice about sleep, nutrition, exercise, and stress management. Your responses should be friendly, evidence-based, and focused on promoting overall wellbeing. Limit responses to 2-3 paragraphs at most. USER QUERY: " + message 
+              }]
             }
           ],
           generationConfig: {
