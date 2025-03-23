@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import ChatInterface from '../components/ChatInterface';
 import { useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
 
 const Chat = () => {
   const location = useLocation();
@@ -14,6 +14,7 @@ const Chat = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [testingApiKey, setTestingApiKey] = useState(false);
 
   // Parse query parameters to check if a topic was passed
   useEffect(() => {
@@ -63,6 +64,56 @@ const Chat = () => {
       "How do sleep, diet, and exercise affect each other?",
       "Tips for building healthy habits"
     ]
+  };
+
+  // Function to test if the OpenAI API key is working
+  const testApiKey = async () => {
+    setTestingApiKey(true);
+    setError(null);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('chat-ai', {
+        body: { test: true },
+      });
+
+      if (error) {
+        console.error('Error calling test function:', error);
+        toast({
+          title: "Test Error",
+          description: "Failed to test the API key.",
+          variant: "destructive"
+        });
+        setError('Failed to test the API key. Check the Supabase function logs for details.');
+        return;
+      }
+
+      console.log('API key test result:', data);
+      
+      if (data.status === 'success') {
+        toast({
+          title: "Success",
+          description: "OpenAI API key is valid and working!",
+          variant: "default"
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: data.message || "API key test failed",
+          variant: "destructive"
+        });
+        setError(`API key test failed: ${data.message}`);
+      }
+    } catch (error) {
+      console.error('Error in testApiKey:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while testing the API key.",
+        variant: "destructive"
+      });
+      setError('An unexpected error occurred while testing the API key.');
+    } finally {
+      setTestingApiKey(false);
+    }
   };
 
   // Real LLM chat response handler
@@ -151,6 +202,19 @@ const Chat = () => {
               </button>
             </div>
           )}
+          
+          {/* API Key Test Button */}
+          <div className="mb-4 flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={testApiKey}
+              disabled={testingApiKey}
+              className="text-xs"
+            >
+              {testingApiKey ? "Testing..." : "Test OpenAI API Key"}
+            </Button>
+          </div>
           
           {/* Chat Interface */}
           <div className="flex-1">

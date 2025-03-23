@@ -16,8 +16,77 @@ serve(async (req) => {
   }
 
   try {
-    const { message } = await req.json();
+    const requestData = await req.json();
+    const { message, test } = requestData;
     
+    // Test endpoint to verify OpenAI API key
+    if (test === true) {
+      console.log('Running API key test...');
+      
+      if (!openAIApiKey) {
+        console.error('OpenAI API key not found in environment variables for test');
+        return new Response(JSON.stringify({ 
+          status: 'error',
+          message: 'OpenAI API key not configured' 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200
+        });
+      }
+
+      try {
+        // Make a minimal API call to test the key
+        const testResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openAIApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [
+              { role: 'system', content: 'You are a test assistant.' },
+              { role: 'user', content: 'Test' }
+            ],
+            max_tokens: 5,
+          }),
+        });
+
+        if (!testResponse.ok) {
+          const errorData = await testResponse.text();
+          console.error('OpenAI API test error:', errorData);
+          
+          return new Response(JSON.stringify({ 
+            status: 'error',
+            message: `API key test failed: ${testResponse.status} - ${errorData}` 
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200
+          });
+        }
+
+        const data = await testResponse.json();
+        return new Response(JSON.stringify({ 
+          status: 'success',
+          message: 'OpenAI API key is valid and working!',
+          response: data.choices[0].message.content
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (testError) {
+        console.error('OpenAI API test failed:', testError);
+        
+        return new Response(JSON.stringify({ 
+          status: 'error',
+          message: `Error testing API key: ${testError.message}` 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200
+        });
+      }
+    }
+    
+    // Regular message processing
     if (!message) {
       throw new Error('No message provided');
     }
