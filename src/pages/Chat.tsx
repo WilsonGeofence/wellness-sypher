@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import ChatInterface from '../components/ChatInterface';
@@ -5,6 +6,8 @@ import { useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 const Chat = () => {
   const location = useLocation();
@@ -101,7 +104,7 @@ const Chat = () => {
           description: data.message || "API key test failed",
           variant: "destructive"
         });
-        setError(`API key test failed: ${data.message}`);
+        setError(data.message || "API key test failed");
       }
     } catch (error) {
       console.error('Error in testApiKey:', error);
@@ -142,9 +145,19 @@ const Chat = () => {
 
       console.log('Received AI response:', data);
       
-      if (!data || !data.response) {
+      if (!data || (!data.response && !data.message)) {
         setError('Received an invalid response format.');
         return "I apologize, but I received an unexpected response format. Please try again.";
+      }
+
+      // Check if there was an error returned with a 200 status
+      if (data.status === 'error') {
+        setError(data.message || 'An error occurred with the AI service.');
+        // Still return the response if provided
+        if (data.response) {
+          return data.response;
+        }
+        return "I apologize, but I'm having trouble processing your request right now. Please try again later.";
       }
 
       // Reset retry count on successful response
@@ -192,15 +205,21 @@ const Chat = () => {
       <div className="p-4 max-w-md mx-auto h-[calc(100vh-4rem)]">
         <div className="flex flex-col h-full">
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
-              {error}
-              <button 
-                className="ml-2 underline" 
-                onClick={() => setError(null)}
-              >
-                Dismiss
-              </button>
-            </div>
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>
+                {error}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setError(null)}
+                  className="ml-2 mt-2"
+                >
+                  Dismiss
+                </Button>
+              </AlertDescription>
+            </Alert>
           )}
           
           {/* API Key Test Button */}

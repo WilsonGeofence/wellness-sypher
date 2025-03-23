@@ -30,7 +30,7 @@ serve(async (req) => {
           message: 'OpenAI API key not configured' 
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200
+          status: 200 // Explicitly return 200 to avoid Edge Function non-2xx error
         });
       }
 
@@ -52,27 +52,38 @@ serve(async (req) => {
           }),
         });
 
+        const responseText = await testResponse.text();
+        console.log('API test response:', testResponse.status, responseText);
+        
         if (!testResponse.ok) {
-          const errorData = await testResponse.text();
-          console.error('OpenAI API test error:', errorData);
-          
           return new Response(JSON.stringify({ 
             status: 'error',
-            message: `API key test failed: ${testResponse.status} - ${errorData}` 
+            message: `API key test failed with status ${testResponse.status}: ${responseText}` 
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200 // Important: Always return 200 to the client
+          });
+        }
+
+        try {
+          const data = JSON.parse(responseText);
+          return new Response(JSON.stringify({ 
+            status: 'success',
+            message: 'OpenAI API key is valid and working!',
+            response: data.choices[0].message.content
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200
+          });
+        } catch (jsonError) {
+          return new Response(JSON.stringify({ 
+            status: 'error',
+            message: `Could not parse OpenAI response: ${responseText}` 
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 200
           });
         }
-
-        const data = await testResponse.json();
-        return new Response(JSON.stringify({ 
-          status: 'success',
-          message: 'OpenAI API key is valid and working!',
-          response: data.choices[0].message.content
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
       } catch (testError) {
         console.error('OpenAI API test failed:', testError);
         
@@ -81,14 +92,20 @@ serve(async (req) => {
           message: `Error testing API key: ${testError.message}` 
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200
+          status: 200 // Important: Always return 200 to the client
         });
       }
     }
     
     // Regular message processing
     if (!message) {
-      throw new Error('No message provided');
+      return new Response(JSON.stringify({ 
+        status: 'error',
+        message: 'No message provided' 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200
+      });
     }
 
     console.log('Received message:', message);
@@ -99,6 +116,8 @@ serve(async (req) => {
       
       // Return a specific response for missing API key
       return new Response(JSON.stringify({ 
+        status: 'error',
+        message: 'OpenAI API key not configured',
         response: "I'm sorry, but I can't connect to my knowledge base right now. The system administrator needs to set up the OpenAI API key. In the meantime, please remember that consistent monitoring of blood glucose levels, staying hydrated, and maintaining a balanced diet are key aspects of diabetes management." 
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -128,18 +147,28 @@ serve(async (req) => {
 
       if (!response.ok) {
         const errorData = await response.text();
-        console.error('OpenAI API error:', errorData);
+        console.error('OpenAI API error:', response.status, errorData);
         
         // Check if it's a rate limit error (429)
         if (response.status === 429) {
           return new Response(JSON.stringify({ 
+            status: 'error',
+            message: 'Rate limit exceeded',
             response: "I'm currently experiencing high demand and couldn't process your request. Please try again in a few moments. For diabetes management, remember to monitor blood glucose regularly, stay hydrated, and maintain a consistent meal schedule. If you have any urgent concerns, please consult your healthcare provider." 
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200
           });
         }
         
-        throw new Error(`OpenAI API error: ${response.status} - ${errorData}`);
+        return new Response(JSON.stringify({ 
+          status: 'error',
+          message: `OpenAI API error: ${response.status} - ${errorData}`,
+          response: "I apologize, but I'm having trouble connecting to my knowledge base right now. For diabetes management, it's important to monitor your blood glucose levels regularly, maintain a consistent meal schedule, stay physically active, and take medications as prescribed. If you have specific concerns, please consult your healthcare provider."
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200
+        });
       }
 
       const data = await response.json();
@@ -147,23 +176,34 @@ serve(async (req) => {
 
       console.log('AI Response:', aiResponse);
 
-      return new Response(JSON.stringify({ response: aiResponse }), {
+      return new Response(JSON.stringify({ 
+        status: 'success',
+        response: aiResponse 
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200
       });
     } catch (openAIError) {
       console.error('OpenAI API call failed:', openAIError);
       
       // Provide a fallback response if OpenAI API call fails
       return new Response(JSON.stringify({ 
+        status: 'error',
+        message: `Error: ${openAIError.message}`,
         response: "I apologize, but I'm having trouble connecting to my knowledge base right now. For diabetes management, it's important to monitor your blood glucose levels regularly, maintain a consistent meal schedule, stay physically active, and take medications as prescribed. If you have specific concerns, please consult your healthcare provider." 
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200
       });
     }
   } catch (error) {
     console.error('Error in chat-ai function:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
+    return new Response(JSON.stringify({ 
+      status: 'error',
+      message: error.message,
+      error: error.message 
+    }), {
+      status: 200, // Always return 200 to avoid Edge Function errors
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
