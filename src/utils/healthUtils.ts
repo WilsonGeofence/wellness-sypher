@@ -155,55 +155,91 @@ export const generateInsights = (healthData: HealthData): { title: string; descr
   
   // Sleep insights
   const recentSleep = filterDataByDateRange(healthData.sleep, weekAgo, now);
-  const avgSleepHours = calculateAverage(recentSleep, 'hours');
   
-  if (avgSleepHours < 6) {
-    insights.push({
-      title: 'Sleep Duration Alert',
-      description: `Your average sleep duration (${avgSleepHours} hours) is below the recommended 7-9 hours, which may impact your energy and overall health.`,
-      type: 'warning',
-    });
-  } else if (avgSleepHours >= 7 && avgSleepHours <= 9) {
-    insights.push({
-      title: 'Optimal Sleep Duration',
-      description: `Great job maintaining an average of ${avgSleepHours} hours of sleep, which falls within the ideal range for adults.`,
-      type: 'success',
-    });
+  if (recentSleep.length > 0) {
+    const avgSleepHours = calculateAverage(recentSleep, 'hours');
+    
+    if (avgSleepHours < 6) {
+      insights.push({
+        title: 'Sleep Duration Alert',
+        description: `Your average sleep duration (${avgSleepHours} hours) is below the recommended 7-9 hours, which may impact your energy and overall health.`,
+        type: 'warning',
+      });
+    } else if (avgSleepHours >= 7 && avgSleepHours <= 9) {
+      insights.push({
+        title: 'Optimal Sleep Duration',
+        description: `Great job maintaining an average of ${avgSleepHours} hours of sleep, which falls within the ideal range for adults.`,
+        type: 'success',
+      });
+    } else {
+      insights.push({
+        title: 'Sleep Pattern',
+        description: `You're averaging ${avgSleepHours} hours of sleep. The recommended range for adults is 7-9 hours.`,
+        type: 'info',
+      });
+    }
   }
   
   // Activity insights
   const recentActivity = filterDataByDateRange(healthData.activity, weekAgo, now);
-  const avgActivityMinutes = calculateAverage(recentActivity, 'minutes');
   
-  if (avgActivityMinutes < 20) {
-    insights.push({
-      title: 'Activity Level Alert',
-      description: `Your physical activity level (${avgActivityMinutes} mins/day) is below the recommended 30 minutes per day. Consider adding a short walk to your routine.`,
-      type: 'warning',
-    });
-  } else if (avgActivityMinutes >= 30) {
-    insights.push({
-      title: 'Excellent Activity Level',
-      description: `You're averaging ${avgActivityMinutes} minutes of activity daily, which meets or exceeds recommendations. Keep it up!`,
-      type: 'success',
-    });
+  if (recentActivity.length > 0) {
+    const avgActivityMinutes = calculateAverage(recentActivity, 'minutes');
+    
+    if (avgActivityMinutes < 20) {
+      insights.push({
+        title: 'Activity Level Alert',
+        description: `Your physical activity level (${avgActivityMinutes} mins/day) is below the recommended 30 minutes per day. Consider adding a short walk to your routine.`,
+        type: 'warning',
+      });
+    } else if (avgActivityMinutes >= 30) {
+      insights.push({
+        title: 'Excellent Activity Level',
+        description: `You're averaging ${avgActivityMinutes} minutes of activity daily, which meets or exceeds recommendations. Keep it up!`,
+        type: 'success',
+      });
+    } else {
+      insights.push({
+        title: 'Activity Progress',
+        description: `You're averaging ${avgActivityMinutes} minutes of daily activity. You're on the right track, but aim for at least 30 minutes per day.`,
+        type: 'info',
+      });
+    }
   }
   
   // Stress insights
   const recentStress = filterDataByDateRange(healthData.stress, weekAgo, now);
-  const avgStressLevel = calculateAverage(recentStress, 'level');
   
-  if (avgStressLevel > 7) {
+  if (recentStress.length > 0) {
+    const avgStressLevel = calculateAverage(recentStress, 'level');
+    
+    if (avgStressLevel > 7) {
+      insights.push({
+        title: 'High Stress Detected',
+        description: `Your stress levels are consistently high. Consider incorporating mindfulness practices or breaks throughout your day.`,
+        type: 'warning',
+      });
+    } else if (avgStressLevel < 4) {
+      insights.push({
+        title: 'Stress Management Success',
+        description: `Your stress levels are well-managed. Your mindfulness practices appear to be working effectively.`,
+        type: 'success',
+      });
+    } else {
+      insights.push({
+        title: 'Stress Levels',
+        description: `Your stress levels are moderate. Regular mindfulness practices can help maintain or reduce these levels.`,
+        type: 'info',
+      });
+    }
+  }
+  
+  // Always provide at least one general insight
+  if (insights.length === 0) {
     insights.push({
-      title: 'High Stress Detected',
-      description: `Your stress levels are consistently high. Consider incorporating mindfulness practices or breaks throughout your day.`,
-      type: 'warning',
-    });
-  } else if (avgStressLevel < 4) {
-    insights.push({
-      title: 'Stress Management Success',
-      description: `Your stress levels are well-managed. Your mindfulness practices appear to be working effectively.`,
-      type: 'success',
+      title: 'Welcome to Health Insights',
+      description: 'Start logging your daily health metrics to receive personalized insights and recommendations.',
+      type: 'info',
     });
   }
   

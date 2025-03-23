@@ -13,6 +13,7 @@ export const fetchUserHealthData = async (): Promise<HealthData | null> => {
     const { data: sleepData, error: sleepError } = await supabase
       .from('sleep_data')
       .select('*')
+      .eq('user_id', user.id)
       .order('time', { ascending: false });
     
     if (sleepError) {
@@ -24,6 +25,7 @@ export const fetchUserHealthData = async (): Promise<HealthData | null> => {
     const { data: activityData, error: activityError } = await supabase
       .from('activity_data')
       .select('*')
+      .eq('user_id', user.id)
       .order('time', { ascending: false });
     
     if (activityError) {
@@ -35,6 +37,7 @@ export const fetchUserHealthData = async (): Promise<HealthData | null> => {
     const { data: dietData, error: dietError } = await supabase
       .from('diet_data')
       .select('*')
+      .eq('user_id', user.id)
       .order('time', { ascending: false });
     
     if (dietError) {
@@ -46,6 +49,7 @@ export const fetchUserHealthData = async (): Promise<HealthData | null> => {
     const { data: stressData, error: stressError } = await supabase
       .from('stress_data')
       .select('*')
+      .eq('user_id', user.id)
       .order('time', { ascending: false });
     
     if (stressError) {
@@ -177,15 +181,7 @@ export const importPAMAP2Dataset = async (): Promise<boolean> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
 
-    // Fetch sample PAMAP2 dataset from a public source
-    const response = await fetch('https://archive.ics.uci.edu/ml/machine-learning-databases/00231/PAMAP2_Dataset.zip');
-    if (!response.ok) {
-      console.error('Failed to fetch PAMAP2 dataset');
-      return false;
-    }
-
-    // For demo purposes, we'll create a simulated dataset based on PAMAP2 structure
-    // rather than parsing the actual ZIP file which would require additional libraries
+    // For demo purposes, we'll create a simulated dataset with realistic patterns
     const today = new Date();
     const activityTypes = ['walking', 'running', 'cycling', 'rope_jumping', 'Nordic_walking'];
     
@@ -194,8 +190,7 @@ export const importPAMAP2Dataset = async (): Promise<boolean> => {
       const date = new Date();
       date.setDate(today.getDate() - i);
       
-      // Generate activity data based on PAMAP2 patterns
-      // In PAMAP2, activities have different intensities and durations
+      // Generate activity data based on realistic patterns
       const activityType = activityTypes[Math.floor(Math.random() * activityTypes.length)];
       let activityMinutes = 0;
       let activityIntensity = 0;

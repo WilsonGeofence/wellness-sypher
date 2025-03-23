@@ -17,7 +17,7 @@ import {
   prepareChartData,
   type HealthData 
 } from '../utils/healthUtils';
-import { fetchUserHealthData } from '../utils/supabaseHealthUtils';
+import { fetchUserHealthData, importPAMAP2Dataset } from '../utils/supabaseHealthUtils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -31,6 +31,7 @@ const Insights = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'sleep' | 'activity' | 'diet' | 'stress'>('overview');
   const [timeframe, setTimeframe] = useState<'week' | 'month'>('week');
+  const [isImporting, setIsImporting] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -84,6 +85,39 @@ const Insights = () => {
     loadHealthData();
   }, [user, navigate, toast]);
 
+  // Import sample data function
+  const handleImportSampleData = async () => {
+    if (!user || isImporting) return;
+    
+    setIsImporting(true);
+    try {
+      const success = await importPAMAP2Dataset();
+      if (success) {
+        toast({
+          title: "Sample Data Imported",
+          description: "Sample health data has been imported successfully.",
+        });
+        // Reload data to show new insights
+        window.location.reload();
+      } else {
+        toast({
+          title: "Import Failed",
+          description: "Failed to import sample data. Please try again.",
+          variant: "destructive"
+        });
+      }
+    } catch (err) {
+      console.error('Error importing sample data:', err);
+      toast({
+        title: "Import Error",
+        description: "An error occurred while importing sample data.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   // Prepare chart data
   const sleepChartData = healthData 
     ? prepareChartData(healthData.sleep, 'time', 'hours', timeframe === 'week' ? 7 : 30)
@@ -101,6 +135,13 @@ const Insights = () => {
   const getAnimationDelay = (index: number) => {
     return { animationDelay: `${100 + (index * 100)}ms` };
   };
+
+  // Check if there's enough data
+  const hasData = healthData && (
+    healthData.sleep.length > 0 || 
+    healthData.activity.length > 0 || 
+    healthData.stress.length > 0
+  );
 
   if (isLoading) {
     return (
@@ -246,13 +287,20 @@ const Insights = () => {
           </div>
         )}
 
-        {/* No Data Message */}
-        {healthData && (healthData.sleep.length === 0 || healthData.activity.length === 0) && (
+        {/* No Data Message with Import Button */}
+        {!hasData && (
           <div className="text-center py-8 mb-6 bg-gray-50 rounded-xl border border-gray-100 animate-fade-in-up">
             <p className="text-sypher-gray-dark">Not enough data to display insights yet.</p>
-            <p className="text-sm text-sypher-gray-dark mt-1">
-              Continue tracking your health metrics for personalized insights.
+            <p className="text-sm text-sypher-gray-dark mt-1 mb-4">
+              Continue tracking your health metrics or import sample data for demonstration.
             </p>
+            <Button 
+              onClick={handleImportSampleData} 
+              disabled={isImporting}
+              className="bg-sypher-blue text-sypher-blue-dark hover:bg-sypher-blue/90"
+            >
+              {isImporting ? 'Importing...' : 'Import Sample Data'}
+            </Button>
           </div>
         )}
 
