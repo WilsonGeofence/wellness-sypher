@@ -2,7 +2,8 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const googleAIApiKey = Deno.env.get('GOOGLE_AI_API_KEY');
+const openAIApiKey = Deno.env.get('OPENAI_API_KEY'); // Keep for backwards compatibility
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -19,36 +20,38 @@ serve(async (req) => {
     const requestData = await req.json();
     const { message, test } = requestData;
     
-    // Test endpoint to verify OpenAI API key
+    // Test endpoint to verify Google AI API key
     if (test === true) {
       console.log('Running API key test...');
       
-      if (!openAIApiKey) {
-        console.error('OpenAI API key not found in environment variables for test');
+      if (!googleAIApiKey) {
+        console.error('Google AI API key not found in environment variables for test');
         return new Response(JSON.stringify({ 
           status: 'error',
-          message: 'OpenAI API key not configured' 
+          message: 'Google AI API key not configured' 
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200 // Explicitly return 200 to avoid Edge Function non-2xx error
+          status: 200
         });
       }
 
       try {
         // Make a minimal API call to test the key
-        const testResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        const testResponse = await fetch('https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=' + googleAIApiKey, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${openAIApiKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: [
-              { role: 'system', content: 'You are a test assistant.' },
-              { role: 'user', content: 'Test' }
+            contents: [
+              {
+                role: "user",
+                parts: [{ text: "Hello, this is a test message." }]
+              }
             ],
-            max_tokens: 5,
+            generationConfig: {
+              maxOutputTokens: 5,
+            }
           }),
         });
 
@@ -61,7 +64,7 @@ serve(async (req) => {
             message: `API key test failed with status ${testResponse.status}: ${responseText}` 
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 200 // Important: Always return 200 to the client
+            status: 200
           });
         }
 
@@ -69,8 +72,8 @@ serve(async (req) => {
           const data = JSON.parse(responseText);
           return new Response(JSON.stringify({ 
             status: 'success',
-            message: 'OpenAI API key is valid and working!',
-            response: data.choices[0].message.content
+            message: 'Google AI API key is valid and working!',
+            response: data.candidates?.[0]?.content?.parts?.[0]?.text || "Test successful"
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 200
@@ -78,21 +81,21 @@ serve(async (req) => {
         } catch (jsonError) {
           return new Response(JSON.stringify({ 
             status: 'error',
-            message: `Could not parse OpenAI response: ${responseText}` 
+            message: `Could not parse Google AI response: ${responseText}` 
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 200
           });
         }
       } catch (testError) {
-        console.error('OpenAI API test failed:', testError);
+        console.error('Google AI API test failed:', testError);
         
         return new Response(JSON.stringify({ 
           status: 'error',
           message: `Error testing API key: ${testError.message}` 
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200 // Important: Always return 200 to the client
+          status: 200
         });
       }
     }
@@ -111,45 +114,50 @@ serve(async (req) => {
     console.log('Received message:', message);
 
     // Check if the API key exists and log more detailed information
-    if (!openAIApiKey) {
-      console.error('OpenAI API key not found in environment variables');
+    if (!googleAIApiKey) {
+      console.error('Google AI API key not found in environment variables');
       
       // Return a specific response for missing API key
       return new Response(JSON.stringify({ 
         status: 'error',
-        message: 'OpenAI API key not configured',
-        response: "I'm sorry, but I can't connect to my knowledge base right now. The system administrator needs to set up the OpenAI API key. In the meantime, please remember that consistent monitoring of blood glucose levels, staying hydrated, and maintaining a balanced diet are key aspects of diabetes management." 
+        message: 'Google AI API key not configured',
+        response: "I'm sorry, but I can't connect to my knowledge base right now. The system administrator needs to set up the Google AI API key. In the meantime, please remember that consistent monitoring of blood glucose levels, staying hydrated, and maintaining a balanced diet are key aspects of diabetes management." 
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200 // Return 200 to avoid frontend errors
+        status: 200
       });
     }
 
     try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      // Call the Google AI Gemini API
+      const response = await fetch('https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=' + googleAIApiKey, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${openAIApiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [
-            { 
-              role: 'system', 
-              content: 'You are Sypher, a health and wellness AI assistant. Provide helpful, concise advice about sleep, nutrition, exercise, and stress management. Your responses should be friendly, evidence-based, and focused on promoting overall wellbeing. Limit responses to 2-3 paragraphs at most.' 
+          contents: [
+            {
+              role: "system",
+              parts: [{ text: "You are Sypher, a health and wellness AI assistant. Provide helpful, concise advice about sleep, nutrition, exercise, and stress management. Your responses should be friendly, evidence-based, and focused on promoting overall wellbeing. Limit responses to 2-3 paragraphs at most." }]
             },
-            { role: 'user', content: message }
+            {
+              role: "user",
+              parts: [{ text: message }]
+            }
           ],
-          max_tokens: 500,
+          generationConfig: {
+            maxOutputTokens: 500,
+            temperature: 0.7
+          }
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.text();
-        console.error('OpenAI API error:', response.status, errorData);
+        console.error('Google AI API error:', response.status, errorData);
         
-        // Check if it's a rate limit error (429)
+        // Check if it's a rate limit error
         if (response.status === 429) {
           return new Response(JSON.stringify({ 
             status: 'error',
@@ -163,7 +171,7 @@ serve(async (req) => {
         
         return new Response(JSON.stringify({ 
           status: 'error',
-          message: `OpenAI API error: ${response.status} - ${errorData}`,
+          message: `Google AI API error: ${response.status} - ${errorData}`,
           response: "I apologize, but I'm having trouble connecting to my knowledge base right now. For diabetes management, it's important to monitor your blood glucose levels regularly, maintain a consistent meal schedule, stay physically active, and take medications as prescribed. If you have specific concerns, please consult your healthcare provider."
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -172,9 +180,9 @@ serve(async (req) => {
       }
 
       const data = await response.json();
-      const aiResponse = data.choices[0].message.content;
+      const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "I apologize, but I couldn't generate a response at this time.";
 
-      console.log('AI Response:', aiResponse);
+      console.log('AI Response (truncated):', aiResponse.substring(0, 100) + "...");
 
       return new Response(JSON.stringify({ 
         status: 'success',
@@ -183,13 +191,13 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200
       });
-    } catch (openAIError) {
-      console.error('OpenAI API call failed:', openAIError);
+    } catch (aiError) {
+      console.error('Google AI API call failed:', aiError);
       
-      // Provide a fallback response if OpenAI API call fails
+      // Provide a fallback response if API call fails
       return new Response(JSON.stringify({ 
         status: 'error',
-        message: `Error: ${openAIError.message}`,
+        message: `Error: ${aiError.message}`,
         response: "I apologize, but I'm having trouble connecting to my knowledge base right now. For diabetes management, it's important to monitor your blood glucose levels regularly, maintain a consistent meal schedule, stay physically active, and take medications as prescribed. If you have specific concerns, please consult your healthcare provider." 
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -203,7 +211,7 @@ serve(async (req) => {
       message: error.message,
       error: error.message 
     }), {
-      status: 200, // Always return 200 to avoid Edge Function errors
+      status: 200, 
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }

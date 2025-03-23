@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import ChatInterface from '../components/ChatInterface';
@@ -19,7 +18,6 @@ const Chat = () => {
   const [retryCount, setRetryCount] = useState(0);
   const [testingApiKey, setTestingApiKey] = useState(false);
 
-  // Parse query parameters to check if a topic was passed
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const topic = params.get('topic');
@@ -27,7 +25,6 @@ const Chat = () => {
       setSelectedTopic(topic);
     }
 
-    // Simulate loading
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 500);
@@ -35,7 +32,6 @@ const Chat = () => {
     return () => clearTimeout(timer);
   }, [location]);
 
-  // Chat suggestions based on topics
   const topicSuggestions: Record<string, string[]> = {
     sleep: [
       "How can I improve my sleep quality?",
@@ -69,7 +65,6 @@ const Chat = () => {
     ]
   };
 
-  // Function to test if the OpenAI API key is working
   const testApiKey = async () => {
     setTestingApiKey(true);
     setError(null);
@@ -95,7 +90,7 @@ const Chat = () => {
       if (data.status === 'success') {
         toast({
           title: "Success",
-          description: "OpenAI API key is valid and working!",
+          description: "Google AI API key is valid and working!",
           variant: "default"
         });
       } else {
@@ -119,7 +114,6 @@ const Chat = () => {
     }
   };
 
-  // Real LLM chat response handler
   const handleSendMessage = async (message: string): Promise<string> => {
     setIsProcessing(true);
     setError(null);
@@ -127,7 +121,6 @@ const Chat = () => {
     try {
       console.log('Sending message to AI:', message);
       
-      // Call our Supabase Edge Function
       const { data, error } = await supabase.functions.invoke('chat-ai', {
         body: { message },
       });
@@ -150,27 +143,22 @@ const Chat = () => {
         return "I apologize, but I received an unexpected response format. Please try again.";
       }
 
-      // Check if there was an error returned with a 200 status
       if (data.status === 'error') {
         setError(data.message || 'An error occurred with the AI service.');
-        // Still return the response if provided
         if (data.response) {
           return data.response;
         }
         return "I apologize, but I'm having trouble processing your request right now. Please try again later.";
       }
 
-      // Reset retry count on successful response
       setRetryCount(0);
       return data.response;
     } catch (error) {
       console.error('Error in handleSendMessage:', error);
       
-      // Increment retry count
       setRetryCount(prev => prev + 1);
       
       if (retryCount >= 2) {
-        // After 2 retries, provide a more specific message
         setError('Service is currently unavailable. Please try again later.');
         toast({
           title: "Service Unavailable",
@@ -222,7 +210,6 @@ const Chat = () => {
             </Alert>
           )}
           
-          {/* API Key Test Button */}
           <div className="mb-4 flex justify-end">
             <Button
               variant="outline"
@@ -231,11 +218,10 @@ const Chat = () => {
               disabled={testingApiKey}
               className="text-xs"
             >
-              {testingApiKey ? "Testing..." : "Test OpenAI API Key"}
+              {testingApiKey ? "Testing..." : "Test Google AI API Key"}
             </Button>
           </div>
           
-          {/* Chat Interface */}
           <div className="flex-1">
             <ChatInterface 
               onSendMessage={handleSendMessage}

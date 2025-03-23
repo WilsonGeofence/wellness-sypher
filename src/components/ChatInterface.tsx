@@ -25,7 +25,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: "Hi! I'm Sypher!\nyour AI personal health assistant",
+      text: "Hi! I'm Sypher!\nyour AI personal health assistant powered by Google Gemini",
       sender: 'ai',
       timestamp: new Date()
     }
