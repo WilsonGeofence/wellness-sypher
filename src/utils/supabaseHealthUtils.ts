@@ -101,13 +101,6 @@ export const addHealthMetric = async (
   data: any
 ): Promise<boolean> => {
   try {
-    // Get the current user
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      console.error('No user logged in');
-      return false;
-    }
-    
     let result;
 
     switch (category) {
@@ -115,7 +108,6 @@ export const addHealthMetric = async (
         result = await supabase
           .from('sleep_data')
           .insert({
-            user_id: user.id,
             hours: data.hours,
             quality: data.quality || 5,
             time: data.time || new Date()
@@ -126,7 +118,6 @@ export const addHealthMetric = async (
         result = await supabase
           .from('activity_data')
           .insert({
-            user_id: user.id,
             minutes: data.minutes,
             intensity: data.intensity || 5,
             type: data.type || 'walking',
@@ -138,7 +129,6 @@ export const addHealthMetric = async (
         result = await supabase
           .from('diet_data')
           .insert({
-            user_id: user.id,
             meal_name: data.meal_name,
             quality: data.quality,
             water: data.water,
@@ -150,7 +140,6 @@ export const addHealthMetric = async (
         result = await supabase
           .from('stress_data')
           .insert({
-            user_id: user.id,
             level: data.level,
             notes: data.notes || '',
             time: data.time || new Date()
