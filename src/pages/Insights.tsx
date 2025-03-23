@@ -9,21 +9,31 @@ import {
   Heart, 
   Calendar, 
   ArrowLeft, 
-  ArrowRight 
+  ArrowRight,
+  AlertCircle
 } from 'lucide-react';
 import { 
-  generateMockHealthData, 
   generateInsights, 
   prepareChartData,
   type HealthData 
 } from '../utils/healthUtils';
+import { fetchUserHealthData } from '../utils/supabaseHealthUtils';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 
 const Insights = () => {
   const [healthData, setHealthData] = useState<HealthData | null>(null);
   const [insights, setInsights] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'sleep' | 'activity' | 'diet' | 'stress'>('overview');
   const [timeframe, setTimeframe] = useState<'week' | 'month'>('week');
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   
   const tabOptions = [
     { id: 'overview', label: 'Overview', icon: <Calendar size={18} /> },
@@ -32,40 +42,47 @@ const Insights = () => {
     { id: 'stress', label: 'Stress', icon: <Heart size={18} /> },
   ];
 
-  // Load health data
+  // Load health data from Supabase
   useEffect(() => {
-    const savedHealthData = localStorage.getItem('healthData');
-    if (savedHealthData) {
-      const parsedData = JSON.parse(savedHealthData, (key, value) => {
-        // Convert date strings back to Date objects
-        if (key === 'time' && typeof value === 'string') {
-          return new Date(value);
+    const loadHealthData = async () => {
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        if (!user) {
+          // If not logged in, redirect to auth page
+          toast({
+            title: "Authentication Required",
+            description: "Please sign in to view your health insights",
+            variant: "destructive"
+          });
+          navigate('/auth');
+          return;
         }
-        return value;
-      });
-      setHealthData(parsedData);
-    } else {
-      // Generate mock data for first-time users
-      const mockData = generateMockHealthData();
-      setHealthData(mockData);
-      localStorage.setItem('healthData', JSON.stringify(mockData));
-    }
+        
+        const data = await fetchUserHealthData();
+        
+        if (data) {
+          setHealthData(data);
+          // Generate insights based on the fetched data
+          const generatedInsights = generateInsights(data);
+          setInsights(generatedInsights);
+        } else {
+          setError("Could not load health data. Please try again later.");
+        }
+      } catch (err) {
+        console.error('Error loading health data:', err);
+        setError("An error occurred while fetching your health data.");
+      } finally {
+        // Short delay for loading state to feel natural
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 500);
+      }
+    };
 
-    // Simulate loading
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 800);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Generate insights when health data changes
-  useEffect(() => {
-    if (healthData) {
-      const generatedInsights = generateInsights(healthData);
-      setInsights(generatedInsights);
-    }
-  }, [healthData]);
+    loadHealthData();
+  }, [user, navigate, toast]);
 
   // Prepare chart data
   const sleepChartData = healthData 
@@ -108,6 +125,20 @@ const Insights = () => {
             Trends, patterns, and recommendations based on your data
           </p>
         </div>
+
+        {/* Error Alert */}
+        {error && (
+          <Alert variant="destructive" className="mb-6 animate-fade-in-up">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+            <div className="mt-2">
+              <Button variant="outline" size="sm" onClick={() => navigate(0)}>
+                Retry
+              </Button>
+            </div>
+          </Alert>
+        )}
 
         {/* Tabs */}
         <div className="flex overflow-x-auto pb-2 mb-6 animate-fade-in-up" style={getAnimationDelay(1)}>
@@ -215,35 +246,49 @@ const Insights = () => {
           </div>
         )}
 
+        {/* No Data Message */}
+        {healthData && (healthData.sleep.length === 0 || healthData.activity.length === 0) && (
+          <div className="text-center py-8 mb-6 bg-gray-50 rounded-xl border border-gray-100 animate-fade-in-up">
+            <p className="text-sypher-gray-dark">Not enough data to display insights yet.</p>
+            <p className="text-sm text-sypher-gray-dark mt-1">
+              Continue tracking your health metrics for personalized insights.
+            </p>
+          </div>
+        )}
+
         {/* Insights Section */}
-        <h2 className="text-xl font-semibold text-sypher-black mb-4 animate-fade-in-up" style={getAnimationDelay(6)}>
-          Your AI-Generated Insights
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {insights.map((insight, index) => (
-            <div className="animate-fade-in-up" style={getAnimationDelay(7 + index)} key={index}>
-              <InsightCard
-                title={insight.title}
-                description={insight.description}
-                type={insight.type}
-                actionText={insight.type === 'warning' ? "Learn How to Improve" : "Learn More"}
-                onAction={() => {
-                  // Navigate to chat with a pre-filled question
-                  const queryString = new URLSearchParams({
-                    topic: insight.title.toLowerCase().includes('sleep') 
-                      ? 'sleep' 
-                      : insight.title.toLowerCase().includes('stress')
-                      ? 'stress'
-                      : insight.title.toLowerCase().includes('activity')
-                      ? 'activity'
-                      : 'general'
-                  }).toString();
-                  window.location.href = `/chat?${queryString}`;
-                }}
-              />
+        {insights.length > 0 && (
+          <>
+            <h2 className="text-xl font-semibold text-sypher-black mb-4 animate-fade-in-up" style={getAnimationDelay(6)}>
+              Your AI-Generated Insights
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              {insights.map((insight, index) => (
+                <div className="animate-fade-in-up" style={getAnimationDelay(7 + index)} key={index}>
+                  <InsightCard
+                    title={insight.title}
+                    description={insight.description}
+                    type={insight.type}
+                    actionText={insight.type === 'warning' ? "Learn How to Improve" : "Learn More"}
+                    onAction={() => {
+                      // Navigate to chat with a pre-filled question
+                      const queryString = new URLSearchParams({
+                        topic: insight.title.toLowerCase().includes('sleep') 
+                          ? 'sleep' 
+                          : insight.title.toLowerCase().includes('stress')
+                          ? 'stress'
+                          : insight.title.toLowerCase().includes('activity')
+                          ? 'activity'
+                          : 'general'
+                      }).toString();
+                      window.location.href = `/chat?${queryString}`;
+                    }}
+                  />
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </>
+        )}
 
         {/* Navigation Arrows */}
         <div className="flex justify-between items-center mt-12 animate-fade-in-up" style={getAnimationDelay(10)}>

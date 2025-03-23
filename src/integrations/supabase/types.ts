@@ -9,6 +9,120 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      activity_data: {
+        Row: {
+          created_at: string
+          id: string
+          intensity: number | null
+          minutes: number
+          time: string
+          type: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          intensity?: number | null
+          minutes: number
+          time?: string
+          type?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          intensity?: number | null
+          minutes?: number
+          time?: string
+          type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      diet_data: {
+        Row: {
+          created_at: string
+          id: string
+          meal_name: string | null
+          quality: number | null
+          time: string
+          user_id: string
+          water: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          meal_name?: string | null
+          quality?: number | null
+          time?: string
+          user_id: string
+          water?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          meal_name?: string | null
+          quality?: number | null
+          time?: string
+          user_id?: string
+          water?: number | null
+        }
+        Relationships: []
+      }
+      sleep_data: {
+        Row: {
+          created_at: string
+          hours: number
+          id: string
+          quality: number | null
+          time: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          hours: number
+          id?: string
+          quality?: number | null
+          time?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          hours?: number
+          id?: string
+          quality?: number | null
+          time?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      stress_data: {
+        Row: {
+          created_at: string
+          id: string
+          level: number | null
+          notes: string | null
+          time: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          level?: number | null
+          notes?: string | null
+          time?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          level?: number | null
+          notes?: string | null
+          time?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       Sypher2: {
         Row: {
           created_at: string
@@ -32,7 +146,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_sample_health_data: {
+        Args: {
+          user_uuid: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import HealthMetricCard from '../components/HealthMetricCard';
@@ -11,18 +12,21 @@ import {
   Heart,  
   Utensils, 
   Clock,
-  Plus
+  Plus,
+  AlertCircle
 } from 'lucide-react';
 import { 
-  generateMockHealthData, 
   calculateHealthScore, 
   generateInsights, 
   formatDate,
-  type HealthData
+  type HealthData 
 } from '../utils/healthUtils';
+import { fetchUserHealthData, addHealthMetric } from '../utils/supabaseHealthUtils';
 import { UserData } from '../types/chat';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const Index = () => {
   const [healthData, setHealthData] = useState<HealthData | null>(null);
@@ -31,8 +35,10 @@ const Index = () => {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
+  const { toast } = useToast();
 
   const today = new Date();
   const formattedDate = formatDate(today, 'long');
@@ -59,37 +65,48 @@ const Index = () => {
       setUserData(JSON.parse(savedUserData));
     }
 
-    const savedHealthData = localStorage.getItem('healthData');
-    if (savedHealthData) {
-      const parsedData = JSON.parse(savedHealthData, (key, value) => {
-        if (key === 'time' && typeof value === 'string') {
-          return new Date(value);
-        }
-        return value;
-      });
-      setHealthData(parsedData);
-    } else {
-      const mockData = generateMockHealthData();
-      setHealthData(mockData);
-      localStorage.setItem('healthData', JSON.stringify(mockData));
-    }
-
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-
     return () => subscription.unsubscribe();
   }, [user]);
 
+  // Load health data from Supabase
   useEffect(() => {
-    if (healthData) {
-      const score = calculateHealthScore(healthData);
-      setHealthScore(score);
-      
-      const generatedInsights = generateInsights(healthData);
-      setInsights(generatedInsights);
-    }
-  }, [healthData]);
+    const loadHealthData = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const data = await fetchUserHealthData();
+        if (data) {
+          setHealthData(data);
+          
+          // Calculate health score
+          const score = calculateHealthScore(data);
+          setHealthScore(score);
+          
+          // Generate insights
+          const generatedInsights = generateInsights(data);
+          setInsights(generatedInsights);
+        }
+      } catch (err) {
+        console.error('Error loading health data:', err);
+        setError("Failed to load health data. Please try again later.");
+        toast({
+          title: "Error",
+          description: "Failed to load your health data",
+          variant: "destructive"
+        });
+      } finally {
+        const timer = setTimeout(() => {
+          setIsLoading(false);
+        }, 500);
+        return () => clearTimeout(timer);
+      }
+    };
+
+    loadHealthData();
+  }, [user, toast]);
 
   const handleOnboardingComplete = (userData: UserData) => {
     setUserData(userData);
@@ -97,58 +114,67 @@ const Index = () => {
     setShowWelcomeModal(false);
   };
 
-  const handleMetricUpdate = (category: keyof HealthData, value: number | string, field: string) => {
-    if (!healthData) return;
-
-    const newHealthData = { ...healthData };
-
-    if (category === 'diet' && field === 'water') {
-      const todayEntry = newHealthData.diet.find(
-        item => formatDate(item.time, 'short') === formatDate(new Date(), 'short')
-      );
-
-      if (todayEntry) {
-        todayEntry.water = value as number;
-      } else {
-        newHealthData.diet.push({
-          meals: [],
-          water: value as number,
-          time: new Date()
-        });
-      }
-    } else if (category === 'diet' && field === 'mealQuality') {
-      const todayEntry = newHealthData.diet.find(
-        item => formatDate(item.time, 'short') === formatDate(new Date(), 'short')
-      );
-
-      if (todayEntry) {
-        todayEntry.meals.push({
-          name: 'Meal',
-          quality: value as number,
-          time: new Date()
-        });
-      } else {
-        newHealthData.diet.push({
-          meals: [{
-            name: 'Meal',
-            quality: value as number,
-            time: new Date()
-          }],
-          water: 0,
-          time: new Date()
-        });
-      }
-    } else {
-      const entry = {
-        value: value as number,
-        time: new Date(),
-      };
-      
-      newHealthData[category].push(entry as any);
+  const handleMetricUpdate = async (category: keyof HealthData, value: number | string, field: string) => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to track your health metrics",
+        variant: "destructive"
+      });
+      navigate('/auth');
+      return;
     }
 
-    setHealthData(newHealthData);
-    localStorage.setItem('healthData', JSON.stringify(newHealthData));
+    let success = false;
+
+    if (category === 'sleep' && field === 'hours') {
+      success = await addHealthMetric('sleep', {
+        hours: value as number,
+        quality: 7, // Default quality
+        time: new Date()
+      });
+    } else if (category === 'activity' && field === 'minutes') {
+      success = await addHealthMetric('activity', {
+        minutes: value as number,
+        intensity: 7, // Default intensity
+        type: 'walking', // Default type
+        time: new Date()
+      });
+    } else if (category === 'stress' && field === 'level') {
+      success = await addHealthMetric('stress', {
+        level: value as number,
+        notes: '',
+        time: new Date()
+      });
+    } else if (category === 'diet' && field === 'water') {
+      success = await addHealthMetric('diet', {
+        meal_name: null,
+        quality: null,
+        water: value as number,
+        time: new Date()
+      });
+    }
+
+    if (success) {
+      toast({
+        title: "Metric Updated",
+        description: "Your health data has been saved",
+      });
+      
+      // Refresh health data
+      const newData = await fetchUserHealthData();
+      if (newData) {
+        setHealthData(newData);
+        setHealthScore(calculateHealthScore(newData));
+        setInsights(generateInsights(newData));
+      }
+    } else {
+      toast({
+        title: "Update Failed",
+        description: "Failed to save your health data",
+        variant: "destructive"
+      });
+    }
   };
 
   if (isLoading) {
@@ -186,6 +212,14 @@ const Index = () => {
             </div>
           )}
         </div>
+
+        {error && (
+          <Alert variant="destructive" className="mb-6 animate-fade-in-up">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="md:col-span-1 flex justify-center glass-card p-6 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
@@ -299,6 +333,12 @@ const Index = () => {
               onAction={() => navigate('/insights')}
             />
           ))}
+          
+          {(!insights || insights.length === 0) && user && (
+            <div className="col-span-full text-center py-6 bg-gray-50 rounded-xl border border-gray-100">
+              <p className="text-sypher-gray-dark">Start tracking your health metrics to receive AI insights</p>
+            </div>
+          )}
         </div>
       </div>
 
