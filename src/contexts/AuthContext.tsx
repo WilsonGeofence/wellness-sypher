@@ -9,6 +9,8 @@ type AuthContextType = {
   user: User | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  signUpWithEmail: (email: string, password: string) => Promise<{ error: any | null; data: any | null }>;
+  signInWithEmail: (email: string, password: string) => Promise<{ error: any | null; data: any | null }>;
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -16,6 +18,8 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   signOut: async () => {},
+  signUpWithEmail: async () => ({ error: null, data: null }),
+  signInWithEmail: async () => ({ error: null, data: null }),
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -92,11 +96,83 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signUpWithEmail = async (email: string, password: string) => {
+    try {
+      console.log("Attempting to sign up with email:", email);
+      const result = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+        }
+      });
+      
+      console.log("Sign up result:", result);
+      
+      if (result.error) {
+        console.error("Sign up error:", result.error);
+        toast({
+          title: "Sign up failed",
+          description: result.error.message || "There was a problem creating your account",
+          variant: "destructive"
+        });
+      } else if (result.data?.user) {
+        toast({
+          title: "Account created!",
+          description: "Please check your email to confirm your account."
+        });
+      }
+      
+      return result;
+    } catch (error: any) {
+      console.error("Exception during sign up:", error);
+      toast({
+        title: "Sign up failed",
+        description: error.message || "There was a problem creating your account",
+        variant: "destructive"
+      });
+      return { error, data: null };
+    }
+  };
+
+  const signInWithEmail = async (email: string, password: string) => {
+    try {
+      console.log("Attempting to sign in with email:", email);
+      const result = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      console.log("Sign in result:", result);
+      
+      if (result.error) {
+        console.error("Sign in error:", result.error);
+        toast({
+          title: "Sign in failed",
+          description: result.error.message || "Invalid email or password",
+          variant: "destructive"
+        });
+      }
+      
+      return result;
+    } catch (error: any) {
+      console.error("Exception during sign in:", error);
+      toast({
+        title: "Sign in failed",
+        description: error.message || "There was a problem signing in",
+        variant: "destructive"
+      });
+      return { error, data: null };
+    }
+  };
+
   const value = {
     session,
     user,
     loading,
     signOut,
+    signUpWithEmail,
+    signInWithEmail,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

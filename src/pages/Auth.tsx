@@ -1,8 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import EmailAuthForm from '@/components/auth/EmailAuthForm';
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton';
@@ -10,7 +8,6 @@ import AuthHeader from '@/components/auth/AuthHeader';
 import AuthToggle from '@/components/auth/AuthToggle';
 
 const Auth = () => {
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSignUp, setIsSignUp] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -24,20 +21,12 @@ const Auth = () => {
 
   const toggleAuthMode = () => {
     setIsSignUp(!isSignUp);
-    setErrorMessage(null);
   };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-r from-sypher-blue-dark to-sypher-blue-accent p-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl">
         <AuthHeader isSignUp={isSignUp} />
-
-        {errorMessage && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{errorMessage}</AlertDescription>
-          </Alert>
-        )}
 
         <EmailAuthForm isSignUp={isSignUp} />
 
