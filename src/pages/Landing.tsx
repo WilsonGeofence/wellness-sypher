@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,14 @@ import {
 
 const Landing = () => {
   const navigate = useNavigate();
+
+  // Function to scroll to the features section
+  const scrollToFeatures = () => {
+    const featuresSection = document.getElementById('features');
+    if (featuresSection) {
+      featuresSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -77,6 +84,7 @@ const Landing = () => {
               <Button 
                 variant="outline" 
                 className="border-gray-300 text-gray-700 hover:bg-gray-50 text-lg px-8 py-6 h-auto"
+                onClick={scrollToFeatures}
               >
                 Learn More
               </Button>
