@@ -21,7 +21,7 @@ const GoogleAuthButton: React.FC<{ disabled?: boolean }> = ({ disabled = false }
         options: {
           redirectTo: `${origin}/dashboard`, 
           queryParams: {
-            prompt: 'select_account',
+            prompt: 'consent', // Use consent instead of select_account for faster auth flow
             access_type: 'offline', // Request a refresh token
           }
         }

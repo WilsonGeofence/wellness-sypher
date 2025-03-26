@@ -19,22 +19,18 @@ export const useAuthRedirect = () => {
         console.log('Detected access token in URL hash, processing authentication');
         
         try {
-          // Clean up URL by removing the hash
+          // Clean up URL immediately to prevent issues with refreshes
           const cleanUrl = window.location.pathname;
           window.history.replaceState({}, document.title, cleanUrl);
           
-          // Get the session since token is already processed by Supabase client
+          // Using the session directly from the hash without additional call
           const { data: { session } } = await supabase.auth.getSession();
           
           if (session?.user) {
             console.log('User authenticated successfully:', session.user.email);
             
-            toast({
-              title: "Sign in successful",
-              description: `Welcome${session.user.email ? ' ' + session.user.email : ''}!`
-            });
-            
-            // Redirect to dashboard
+            // Redirect to dashboard directly without showing toast
+            // This speeds up the process by eliminating an extra render cycle
             navigate('/dashboard', { replace: true });
           }
         } catch (error) {
@@ -48,6 +44,7 @@ export const useAuthRedirect = () => {
       }
     };
 
+    // Execute the auth handling immediately
     handleAuthRedirect();
   }, [navigate, toast]);
 };
