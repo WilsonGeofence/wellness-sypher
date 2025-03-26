@@ -1,15 +1,41 @@
-import { useLocation } from "react-router-dom";
+
+import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const NotFound = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
+    // Log the 404 error
     console.error(
       "404 Error: User attempted to access non-existent route:",
       location.pathname
     );
-  }, [location.pathname]);
+
+    // Special case: check if this is a redirect from authentication with hash
+    if (location.hash && location.hash.includes('access_token')) {
+      console.log('Detected access token in URL hash on 404 page');
+      
+      // Clean up URL and redirect to dashboard
+      const cleanUrl = window.location.origin + '/dashboard';
+      window.history.replaceState({}, document.title, cleanUrl);
+      
+      // Verify session
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user) {
+          toast({
+            title: "Sign in successful",
+            description: "You've been redirected to the dashboard"
+          });
+          navigate('/dashboard', { replace: true });
+        }
+      });
+    }
+  }, [location.pathname, location.hash, navigate, toast]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
