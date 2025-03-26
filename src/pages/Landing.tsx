@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -267,7 +266,7 @@ const Landing = () => {
           </div>
           
           <div className="mt-12 border-t border-gray-100 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-sm text-gray-500">© 2024 Sypher Health. All rights reserved.</p>
+            <p className="text-sm text-gray-500">© 2025 Sypher Health. All rights reserved.</p>
             <div className="mt-4 md:mt-0 flex space-x-6">
               <a href="#" className="text-gray-400 hover:text-gray-500">
                 <span className="sr-only">Twitter</span>
