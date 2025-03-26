@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,11 @@ const Landing = () => {
     if (featuresSection) {
       featuresSection.scrollIntoView({ behavior: 'smooth' });
     }
+  };
+
+  // Function to open AI Support section
+  const goToAISupport = () => {
+    scrollToFeatures();
   };
 
   return (
@@ -58,7 +64,10 @@ const Landing = () => {
       <section className="relative overflow-hidden pt-24 md:pt-32 pb-16 md:pb-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <div className="inline-flex items-center justify-center rounded-full bg-sypher-blue px-3 py-1 text-sm leading-6 text-sypher-blue-dark mb-6">
+            <div 
+              className="inline-flex items-center justify-center rounded-full bg-sypher-blue px-3 py-1 text-sm leading-6 text-sypher-blue-dark mb-6 cursor-pointer hover:bg-sypher-blue/80 transition-colors"
+              onClick={goToAISupport}
+            >
               <span className="flex items-center">
                 <Sparkles className="mr-1 h-3 w-3" /> 
                 Introducing AI Support
