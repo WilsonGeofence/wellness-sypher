@@ -19,7 +19,6 @@ const Auth = () => {
   // Redirect authenticated users
   useEffect(() => {
     if (!loading && user) {
-      console.log("User already logged in, redirecting to dashboard");
       navigate('/dashboard');
     }
   }, [user, navigate, loading]);
