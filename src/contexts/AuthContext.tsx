@@ -3,6 +3,7 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 type AuthContextType = {
   session: Session | null;
@@ -37,6 +38,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log("Auth state changed:", event, session?.user?.email);
+        
+        if (event === 'SIGNED_IN' && session?.user) {
+          console.log("User successfully signed in:", session.user.email);
+        } else if (event === 'SIGNED_OUT') {
+          console.log("User signed out");
+        } else if (event === 'TOKEN_REFRESHED') {
+          console.log("Auth token refreshed");
+        } else if (event === 'USER_UPDATED') {
+          console.log("User information updated");
+        }
         
         // Update state based on auth events
         setSession(session);
@@ -73,6 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [toast]);
 
   const signOut = async () => {
+    console.log("Signing out");
     try {
       await supabase.auth.signOut();
     } catch (error: any) {
@@ -87,6 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUpWithEmail = async (email: string, password: string) => {
     try {
+      console.log("Attempting to sign up with email:", email);
       const result = await supabase.auth.signUp({
         email,
         password,
@@ -95,7 +108,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       });
       
+      console.log("Sign up result:", result);
+      
       if (result.error) {
+        console.error("Sign up error:", result.error);
         toast({
           title: "Sign up failed",
           description: result.error.message || "There was a problem creating your account",
@@ -110,6 +126,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       return result;
     } catch (error: any) {
+      console.error("Exception during sign up:", error);
       toast({
         title: "Sign up failed",
         description: error.message || "There was a problem creating your account",
@@ -121,12 +138,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInWithEmail = async (email: string, password: string) => {
     try {
+      console.log("Attempting to sign in with email:", email);
       const result = await supabase.auth.signInWithPassword({
         email,
         password
       });
       
+      console.log("Sign in result:", result);
+      
       if (result.error) {
+        console.error("Sign in error:", result.error);
         toast({
           title: "Sign in failed",
           description: result.error.message || "Invalid email or password",
@@ -136,6 +157,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       return result;
     } catch (error: any) {
+      console.error("Exception during sign in:", error);
       toast({
         title: "Sign in failed",
         description: error.message || "There was a problem signing in",

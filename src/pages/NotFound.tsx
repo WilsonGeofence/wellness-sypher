@@ -1,26 +1,15 @@
-
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { useAuthRedirect } from "@/hooks/use-auth-redirect";
 
 const NotFound = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  
-  // Use the same auth redirect hook that handles tokens in URL
-  useAuthRedirect();
 
   useEffect(() => {
-    // Log the 404 error if not caused by auth redirect
-    if (!location.hash || !location.hash.includes('access_token')) {
-      console.error(
-        "404 Error: User attempted to access non-existent route:",
-        location.pathname
-      );
-    }
-  }, [location.pathname, location.hash]);
+    console.error(
+      "404 Error: User attempted to access non-existent route:",
+      location.pathname
+    );
+  }, [location.pathname]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">

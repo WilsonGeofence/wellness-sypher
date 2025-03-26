@@ -6,19 +6,16 @@ import EmailAuthForm from '@/components/auth/EmailAuthForm';
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton';
 import AuthHeader from '@/components/auth/AuthHeader';
 import AuthToggle from '@/components/auth/AuthToggle';
-import { useAuthRedirect } from '@/hooks/use-auth-redirect';
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const navigate = useNavigate();
   const { user, loading } = useAuth();
 
-  // Use auth redirect hook to handle token in URL hash
-  useAuthRedirect();
-
-  // Redirect authenticated users
   useEffect(() => {
+    // Only redirect after we've confirmed the auth state
     if (!loading && user) {
+      console.log("User already logged in, redirecting to dashboard");
       navigate('/dashboard');
     }
   }, [user, navigate, loading]);
