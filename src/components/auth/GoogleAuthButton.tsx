@@ -17,7 +17,7 @@ const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({ disabled = false })
     setLoading(true);
     
     try {
-      // Use the window location origin without any trailing slash
+      // Get the current window location origin
       const origin = window.location.origin;
       console.log("Starting Google sign-in with redirect URL:", origin);
       
@@ -25,6 +25,7 @@ const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({ disabled = false })
         provider: 'google',
         options: {
           redirectTo: origin,
+          // Using the redirectTo for the callback URL
           queryParams: {
             prompt: 'select_account',
             access_type: 'offline', // Request a refresh token
@@ -39,11 +40,15 @@ const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({ disabled = false })
           description: error.message || "There was a problem signing in with Google",
           variant: "destructive"
         });
+        setLoading(false); // Reset loading state on error
         return;
       }
       
       console.log("Google sign-in initiated successfully, redirecting to:", data.url);
-      // The redirect will happen automatically, handled by Supabase
+      // Let's actually redirect the user instead of relying solely on Supabase
+      if (data.url) {
+        window.location.href = data.url;
+      }
     } catch (error: any) {
       console.error("Failed to initiate Google sign-in:", error);
       toast({
@@ -51,10 +56,7 @@ const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({ disabled = false })
         description: error.message || "An error occurred during Google authentication",
         variant: "destructive"
       });
-    } finally {
-      // Only set loading to false if we're still on the same page
-      // This prevents state updates after the component unmounts during redirect
-      setTimeout(() => setLoading(false), 3000);
+      setLoading(false); // Reset loading state on error
     }
   };
 
