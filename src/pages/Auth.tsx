@@ -20,10 +20,6 @@ const Auth = () => {
     }
   }, [user, navigate, loading]);
 
-  const toggleAuthMode = () => {
-    setIsSignUp(!isSignUp);
-  };
-
   // Don't render the auth form until we've checked if the user is logged in
   if (loading) {
     return (
@@ -58,6 +54,10 @@ const Auth = () => {
       </div>
     </div>
   );
+
+  function toggleAuthMode() {
+    setIsSignUp(!isSignUp);
+  }
 };
 
 export default Auth;
