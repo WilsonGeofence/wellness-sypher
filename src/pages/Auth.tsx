@@ -10,32 +10,18 @@ import AuthToggle from '@/components/auth/AuthToggle';
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
-    // Only redirect after we've confirmed the auth state
-    if (!loading && user) {
-      console.log("User already logged in, redirecting to dashboard");
+    // Redirect if already logged in
+    if (user) {
       navigate('/dashboard');
     }
-  }, [user, navigate, loading]);
+  }, [user, navigate]);
 
   const toggleAuthMode = () => {
     setIsSignUp(!isSignUp);
   };
-
-  // Don't render the auth form until we've checked if the user is logged in
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-r from-sypher-blue-dark to-sypher-blue-accent p-4">
-        <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl">
-          <div className="flex justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-solid border-sypher-blue-accent border-t-transparent"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-r from-sypher-blue-dark to-sypher-blue-accent p-4">

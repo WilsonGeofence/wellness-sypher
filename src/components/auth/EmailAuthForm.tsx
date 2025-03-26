@@ -41,7 +41,7 @@ const EmailAuthForm: React.FC<EmailAuthFormProps> = ({ isSignUp }) => {
         if (error) {
           setErrorMessage(error.message || "An error occurred during sign in");
         } else {
-          navigate('/dashboard');
+          navigate('/');
         }
       }
     } catch (error: any) {
