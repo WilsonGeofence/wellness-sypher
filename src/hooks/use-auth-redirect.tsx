@@ -23,7 +23,7 @@ export const useAuthRedirect = (
       navigate('/dashboard');
     }
     
-    // Check for hash fragment indicating auth redirect
+    // Check for hash fragment indicating auth redirect with access token
     const hash = window.location.hash;
     if (hash && hash.includes('access_token') && user) {
       // If we have a hash with access_token and we're authenticated, redirect to dashboard

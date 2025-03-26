@@ -17,7 +17,7 @@ const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({ disabled = false })
     setLoading(true);
     
     try {
-      // Get the current window location origin
+      // Get the current window location origin for the redirect URL
       const origin = window.location.origin;
       console.log("Starting Google sign-in with redirect URL:", origin);
       
@@ -26,7 +26,7 @@ const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({ disabled = false })
         options: {
           redirectTo: `${origin}/dashboard`, // Redirect to dashboard after successful authentication
           queryParams: {
-            prompt: 'select_account',
+            prompt: 'select_account', // Always show account selection screen
             access_type: 'offline', // Request a refresh token
           }
         }
@@ -44,7 +44,7 @@ const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({ disabled = false })
       }
       
       console.log("Google sign-in initiated successfully, redirecting to:", data.url);
-      // Let's actually redirect the user instead of relying solely on Supabase
+      // Redirect the user to the OAuth provider URL
       if (data.url) {
         window.location.href = data.url;
       }
