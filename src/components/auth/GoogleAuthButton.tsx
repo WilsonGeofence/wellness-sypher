@@ -24,8 +24,7 @@ const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({ disabled = false })
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: origin,
-          // Using the redirectTo for the callback URL
+          redirectTo: `${origin}/dashboard`, // Redirect to dashboard after successful authentication
           queryParams: {
             prompt: 'select_account',
             access_type: 'offline', // Request a refresh token
