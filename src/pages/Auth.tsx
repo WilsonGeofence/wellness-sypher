@@ -1,42 +1,20 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import EmailAuthForm from '@/components/auth/EmailAuthForm';
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton';
 import AuthHeader from '@/components/auth/AuthHeader';
 import AuthToggle from '@/components/auth/AuthToggle';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuthRedirect } from '@/hooks/use-auth-redirect';
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
   const { user, loading } = useAuth();
-  const { toast } = useToast();
 
-  // Check for authentication in URL hash
-  useEffect(() => {
-    if (location.hash && location.hash.includes('access_token')) {
-      console.log('Detected access token in Auth page, verifying session');
-      
-      // Clean up URL
-      const cleanUrl = window.location.origin + window.location.pathname;
-      window.history.replaceState({}, document.title, cleanUrl);
-      
-      // Verify session and redirect
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session?.user) {
-          toast({
-            title: "Sign in successful",
-            description: "Redirecting to dashboard"
-          });
-          navigate('/dashboard', { replace: true });
-        }
-      });
-    }
-  }, [location.hash, navigate, toast]);
+  // Use auth redirect hook to handle token in URL hash
+  useAuthRedirect();
 
   // Redirect authenticated users
   useEffect(() => {

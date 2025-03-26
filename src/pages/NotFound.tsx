@@ -20,20 +20,35 @@ const NotFound = () => {
     if (location.hash && location.hash.includes('access_token')) {
       console.log('Detected access token in URL hash on 404 page');
       
-      // Clean up URL and redirect to dashboard
-      const cleanUrl = window.location.origin + '/dashboard';
-      window.history.replaceState({}, document.title, cleanUrl);
-      
-      // Verify session
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session?.user) {
+      // Process the authentication
+      const processAuth = async () => {
+        try {
+          // Clean up URL and redirect to dashboard
+          const cleanUrl = window.location.origin + '/dashboard';
+          window.history.replaceState({}, document.title, cleanUrl);
+          
+          // Verify session
+          const { data: { session } } = await supabase.auth.getSession();
+          
+          if (session?.user) {
+            toast({
+              title: "Sign in successful",
+              description: "You've been redirected to the dashboard"
+            });
+            navigate('/dashboard', { replace: true });
+          }
+        } catch (error) {
+          console.error('Error processing auth redirect on 404 page:', error);
           toast({
-            title: "Sign in successful",
-            description: "You've been redirected to the dashboard"
+            title: "Authentication Error",
+            description: "There was a problem processing your sign in",
+            variant: "destructive"
           });
-          navigate('/dashboard', { replace: true });
+          navigate('/auth', { replace: true });
         }
-      });
+      };
+      
+      processAuth();
     }
   }, [location.pathname, location.hash, navigate, toast]);
 

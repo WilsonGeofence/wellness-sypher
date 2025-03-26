@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import Header from './navigation/Header';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
+import { useAuthRedirect } from '@/hooks/use-auth-redirect';
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
@@ -16,26 +17,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<any>(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
-  useEffect(() => {
-    // Handle access token in URL hash (for Google Auth redirect)
-    if (location.hash && location.hash.includes('access_token')) {
-      console.log('Detected access token in URL, processing authentication');
-      
-      // Clean up URL by removing the hash
-      const cleanUrl = window.location.origin + window.location.pathname;
-      window.history.replaceState({}, document.title, cleanUrl);
-      
-      // Fetch the session since the token is already processed by Supabase
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session?.user) {
-          toast({
-            title: "Sign in successful",
-            description: `Welcome${session.user.email ? ' ' + session.user.email : ''}!`
-          });
-        }
-      });
-    }
-  }, [location.hash, toast]);
+  // Use auth redirect hook to handle token in URL hash
+  useAuthRedirect();
 
   useEffect(() => {
     // Check current auth status
