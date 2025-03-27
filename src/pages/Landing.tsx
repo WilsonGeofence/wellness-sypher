@@ -7,9 +7,35 @@ import {
   Sparkles,
   CheckCircle2
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Landing = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // Function to scroll to the features section
+  const scrollToFeatures = () => {
+    const featuresSection = document.getElementById('features');
+    if (featuresSection) {
+      featuresSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  // Function to open AI Support section
+  const goToAISupport = () => {
+    scrollToFeatures();
+  };
+
+  // Function to handle the Get Started button click
+  const handleGetStarted = () => {
+    if (user) {
+      // If user is authenticated, redirect to dashboard
+      navigate('/dashboard');
+    } else {
+      // If not authenticated, redirect to auth page
+      navigate('/auth');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -30,19 +56,31 @@ const Landing = () => {
           </nav>
 
           <div className="flex items-center space-x-4">
-            <Button 
-              variant="ghost" 
-              className="text-gray-600 hover:text-gray-900"
-              onClick={() => navigate('/auth')}
-            >
-              Sign In
-            </Button>
-            <Button 
-              className="bg-sypher-blue-dark hover:bg-sypher-blue-accent text-white transition-colors"
-              onClick={() => navigate('/auth')}
-            >
-              Sign Up
-            </Button>
+            {user ? (
+              <Button 
+                variant="ghost" 
+                className="text-gray-600 hover:text-gray-900"
+                onClick={() => navigate('/dashboard')}
+              >
+                Dashboard
+              </Button>
+            ) : (
+              <>
+                <Button 
+                  variant="ghost" 
+                  className="text-gray-600 hover:text-gray-900"
+                  onClick={() => navigate('/auth')}
+                >
+                  Sign In
+                </Button>
+                <Button 
+                  className="bg-sypher-blue-dark hover:bg-sypher-blue-accent text-white transition-colors"
+                  onClick={() => navigate('/auth')}
+                >
+                  Sign Up
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -51,7 +89,10 @@ const Landing = () => {
       <section className="relative overflow-hidden pt-24 md:pt-32 pb-16 md:pb-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <div className="inline-flex items-center justify-center rounded-full bg-sypher-blue px-3 py-1 text-sm leading-6 text-sypher-blue-dark mb-6">
+            <div 
+              className="inline-flex items-center justify-center rounded-full bg-sypher-blue px-3 py-1 text-sm leading-6 text-sypher-blue-dark mb-6 cursor-pointer hover:bg-sypher-blue/80 transition-colors"
+              onClick={goToAISupport}
+            >
               <span className="flex items-center">
                 <Sparkles className="mr-1 h-3 w-3" /> 
                 Introducing AI Support
@@ -70,13 +111,14 @@ const Landing = () => {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button 
                 className="bg-sypher-blue-dark hover:bg-sypher-blue-accent text-white text-lg px-8 py-6 h-auto"
-                onClick={() => navigate('/auth')}
+                onClick={handleGetStarted}
               >
-                Get Started <ArrowRight className="ml-2 h-4 w-4" />
+                {user ? 'Go to Dashboard' : 'Get Started'} <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               <Button 
                 variant="outline" 
                 className="border-gray-300 text-gray-700 hover:bg-gray-50 text-lg px-8 py-6 h-auto"
+                onClick={scrollToFeatures}
               >
                 Learn More
               </Button>
@@ -250,7 +292,7 @@ const Landing = () => {
           </div>
           
           <div className="mt-12 border-t border-gray-100 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-sm text-gray-500">© 2024 Sypher Health. All rights reserved.</p>
+            <p className="text-sm text-gray-500">© 2025 Sypher Health. All rights reserved.</p>
             <div className="mt-4 md:mt-0 flex space-x-6">
               <a href="#" className="text-gray-400 hover:text-gray-500">
                 <span className="sr-only">Twitter</span>
