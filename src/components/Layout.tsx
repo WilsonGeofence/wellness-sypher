@@ -13,7 +13,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const isMobile = useIsMobile();
   const { toast } = useToast();
-  const { user, loading } = useAuth();
+  const { user, loading, session } = useAuth();
   
   useEffect(() => {
     // Handle hash fragment with access_token (common with OAuth redirects)
