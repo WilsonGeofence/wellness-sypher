@@ -1,9 +1,7 @@
-
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
 
 type AuthContextType = {
   session: Session | null;
@@ -39,32 +37,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       (event, session) => {
         console.log("Auth state changed:", event, session?.user?.email);
         
-        if (event === 'SIGNED_IN' && session?.user) {
-          console.log("User successfully signed in:", session.user.email);
-        } else if (event === 'SIGNED_OUT') {
-          console.log("User signed out");
-        } else if (event === 'TOKEN_REFRESHED') {
-          console.log("Auth token refreshed");
-        } else if (event === 'USER_UPDATED') {
-          console.log("User information updated");
-        }
-        
         // Update state based on auth events
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
         
-        // Show toast messages for auth events
-        if (event === 'SIGNED_IN') {
-          toast({
-            title: "Signed in successfully",
-            description: `Welcome${session?.user?.email ? ' ' + session.user.email : ''}!`
-          });
-        } else if (event === 'SIGNED_OUT') {
-          toast({
-            title: "Signed out",
-            description: "You have been signed out successfully"
-          });
+        // Show toast messages for auth events only after initial loading is complete
+        if (!loading) {
+          if (event === 'SIGNED_IN') {
+            toast({
+              title: "Signed in successfully",
+              description: `Welcome${session?.user?.email ? ' ' + session.user.email : ''}!`
+            });
+          } else if (event === 'SIGNED_OUT') {
+            toast({
+              title: "Signed out",
+              description: "You have been signed out successfully"
+            });
+          }
         }
       }
     );
@@ -81,7 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log("Cleaning up auth subscription");
       subscription.unsubscribe();
     };
-  }, [toast]);
+  }, [loading, toast]);
 
   const signOut = async () => {
     console.log("Signing out");

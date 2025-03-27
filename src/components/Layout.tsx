@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import Header from './navigation/Header';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const pathname = window.location.pathname;
@@ -12,9 +13,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const isMobile = useIsMobile();
   const { toast } = useToast();
+  const { user, loading } = useAuth();
   
-  const [user, setUser] = useState<any>(null);
-
   useEffect(() => {
     // Handle hash fragment with access_token (common with OAuth redirects)
     if (location.hash && location.hash.includes('access_token')) {
@@ -25,30 +25,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       const cleanUrl = window.location.pathname;
       window.history.replaceState(null, '', cleanUrl);
     }
-
-    // Check current auth status
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log("Auth state changed:", event, session?.user?.email);
-        setUser(session?.user ?? null);
-        
-        if (event === 'SIGNED_IN') {
-          toast({
-            title: "Signed in successfully",
-            description: "Welcome to Sypher!"
-          });
-        }
-      }
-    );
-
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("Initial session check:", session?.user?.email);
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [location, toast]);
+  }, [location]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
