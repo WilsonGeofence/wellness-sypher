@@ -19,12 +19,13 @@ const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({ disabled = false })
     try {
       // Get the current window location origin
       const origin = window.location.origin;
-      console.log("Starting Google sign-in with redirect URL:", origin);
+      const redirectUrl = `${origin}/dashboard`;
+      console.log("Starting Google sign-in with redirect URL:", redirectUrl);
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${origin}/dashboard`, // Redirect to dashboard after successful authentication
+          redirectTo: redirectUrl,
           queryParams: {
             prompt: 'consent', // Always show consent screen to avoid issues
             access_type: 'offline', // Request a refresh token
