@@ -3,7 +3,7 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 type AuthContextType = {
   session: Session | null;
@@ -31,6 +31,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     console.log("Setting up auth state listener");
@@ -44,14 +45,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.log("User successfully signed in:", session.user.email);
           
           // Redirect to dashboard after successful sign-in
-          if (window.location.pathname === '/auth') {
+          if (location.pathname === '/auth') {
             navigate('/dashboard');
           }
         } else if (event === 'SIGNED_OUT') {
           console.log("User signed out");
           
           // Redirect to landing page after sign-out
-          if (window.location.pathname !== '/') {
+          if (location.pathname !== '/') {
             navigate('/');
           }
         } else if (event === 'TOKEN_REFRESHED') {
@@ -88,7 +89,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
       
       // If we have a session and we're on the auth page, redirect to dashboard
-      if (session && window.location.pathname === '/auth') {
+      if (session && location.pathname === '/auth') {
         navigate('/dashboard');
       }
       
@@ -104,7 +105,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log("Cleaning up auth subscription");
       subscription.unsubscribe();
     };
-  }, [toast, navigate]);
+  }, [toast, navigate, location.pathname]);
 
   const signOut = async () => {
     console.log("Signing out");
