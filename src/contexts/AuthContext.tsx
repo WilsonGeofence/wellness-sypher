@@ -3,7 +3,7 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 type AuthContextType = {
   session: Session | null;
@@ -30,6 +30,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     console.log("Setting up auth state listener");
@@ -41,30 +43,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (event === 'SIGNED_IN' && session?.user) {
           console.log("User successfully signed in:", session.user.email);
-        } else if (event === 'SIGNED_OUT') {
-          console.log("User signed out");
-        } else if (event === 'TOKEN_REFRESHED') {
-          console.log("Auth token refreshed");
-        } else if (event === 'USER_UPDATED') {
-          console.log("User information updated");
-        }
-        
-        // Update state based on auth events
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-        
-        // Show toast messages for auth events
-        if (event === 'SIGNED_IN') {
+          
+          // Update state based on auth events
+          setSession(session);
+          setUser(session?.user ?? null);
+          setLoading(false);
+          
+          // Show toast message for sign in
           toast({
             title: "Signed in successfully",
             description: `Welcome${session?.user?.email ? ' ' + session.user.email : ''}!`
           });
+          
+          // Schedule navigation after state updates (to avoid race conditions)
+          if (location.pathname === '/auth') {
+            setTimeout(() => {
+              navigate('/dashboard');
+            }, 0);
+          }
         } else if (event === 'SIGNED_OUT') {
+          console.log("User signed out");
+          
+          // Update state based on auth events
+          setSession(null);
+          setUser(null);
+          setLoading(false);
+          
+          // Show toast message for sign out
           toast({
             title: "Signed out",
             description: "You have been signed out successfully"
           });
+        } else if (event === 'TOKEN_REFRESHED') {
+          console.log("Auth token refreshed");
+          setSession(session);
+          setUser(session?.user ?? null);
+        } else if (event === 'USER_UPDATED') {
+          console.log("User information updated");
+          setSession(session);
+          setUser(session?.user ?? null);
+        } else {
+          setSession(session);
+          setUser(session?.user ?? null);
+          setLoading(false);
         }
       }
     );
@@ -81,12 +102,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log("Cleaning up auth subscription");
       subscription.unsubscribe();
     };
-  }, [toast]);
+  }, [toast, navigate, location.pathname]);
 
   const signOut = async () => {
     console.log("Signing out");
     try {
       await supabase.auth.signOut();
+      navigate('/auth');
     } catch (error: any) {
       console.error("Error signing out:", error);
       toast({
@@ -153,6 +175,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           description: result.error.message || "Invalid email or password",
           variant: "destructive"
         });
+      } else {
+        // On successful sign in, navigate to dashboard
+        navigate('/dashboard');
       }
       
       return result;

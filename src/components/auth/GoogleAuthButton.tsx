@@ -26,7 +26,7 @@ const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({ disabled = false })
         options: {
           redirectTo: `${origin}/dashboard`, // Redirect to dashboard after successful authentication
           queryParams: {
-            prompt: 'select_account',
+            prompt: 'consent', // Always show consent screen to avoid issues
             access_type: 'offline', // Request a refresh token
           }
         }
@@ -44,7 +44,7 @@ const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({ disabled = false })
       }
       
       console.log("Google sign-in initiated successfully, redirecting to:", data.url);
-      // Let's actually redirect the user instead of relying solely on Supabase
+      // Redirect the user
       if (data.url) {
         window.location.href = data.url;
       }
