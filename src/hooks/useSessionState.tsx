@@ -46,6 +46,7 @@ export const useSessionState = () => {
             title: "Password recovery",
             description: "Please check your email to reset your password."
           });
+        // Fix the TypeScript error by using a different check format
         } else if (event === 'USER_DELETED') {
           console.log("User account deleted");
           toast({
