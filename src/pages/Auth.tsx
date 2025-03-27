@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useProtectedRoute } from '@/hooks/useProtectedRoute';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import EmailAuthForm from '@/components/auth/EmailAuthForm';
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton';
 import AuthHeader from '@/components/auth/AuthHeader';
@@ -9,27 +9,19 @@ import AuthToggle from '@/components/auth/AuthToggle';
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
-  const [searchParams] = useSearchParams();
-  const returnUrl = searchParams.get('returnUrl');
   const navigate = useNavigate();
-  
-  // This route is only for non-authenticated users
-  const { loading } = useProtectedRoute({ 
-    requireAuth: false, 
-    onlyPublic: true 
-  });
+  const { user, loading } = useAuth();
+
+  useEffect(() => {
+    // Only redirect after we've confirmed the auth state
+    if (!loading && user) {
+      console.log("User already logged in, redirecting to dashboard");
+      navigate('/dashboard');
+    }
+  }, [user, navigate, loading]);
 
   const toggleAuthMode = () => {
     setIsSignUp(!isSignUp);
-  };
-
-  // Handle successful authentication - redirect to returnUrl if provided
-  const handleSuccessfulAuth = () => {
-    if (returnUrl) {
-      navigate(decodeURIComponent(returnUrl));
-    } else {
-      navigate('/dashboard');
-    }
   };
 
   // Don't render the auth form until we've checked if the user is logged in
@@ -50,7 +42,7 @@ const Auth = () => {
       <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl">
         <AuthHeader isSignUp={isSignUp} />
 
-        <EmailAuthForm isSignUp={isSignUp} onSuccess={handleSuccessfulAuth} />
+        <EmailAuthForm isSignUp={isSignUp} />
 
         <div className="mt-6 flex items-center justify-center">
           <div className="h-px flex-1 bg-sypher-gray-light"></div>
@@ -59,16 +51,10 @@ const Auth = () => {
         </div>
 
         <div className="mt-6">
-          <GoogleAuthButton onSuccess={handleSuccessfulAuth} />
+          <GoogleAuthButton />
         </div>
 
         <AuthToggle isSignUp={isSignUp} onToggle={toggleAuthMode} />
-
-        {returnUrl && (
-          <p className="mt-4 text-center text-xs text-sypher-gray">
-            You'll be redirected back after signing in
-          </p>
-        )}
       </div>
     </div>
   );
