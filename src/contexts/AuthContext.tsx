@@ -51,13 +51,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             });
           } else if (data?.session) {
             // Clean up the URL by removing the hash fragment
-            window.history.replaceState(null, '', window.location.pathname);
+            window.history.replaceState({}, document.title, location.pathname);
             
             // User is signed in, show toast notification
             toast({
               title: "Signed in successfully",
               description: `Welcome${data.session?.user?.email ? ' ' + data.session.user.email : ''}!`
             });
+
+            // We don't navigate here since we're already on the dashboard page
           }
         } catch (error: any) {
           console.error("Failed to process authentication redirect:", error);
@@ -86,17 +88,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(session?.user ?? null);
           setLoading(false);
           
-          // Show toast message for sign in
-          toast({
-            title: "Signed in successfully",
-            description: `Welcome${session?.user?.email ? ' ' + session.user.email : ''}!`
-          });
-          
-          // Schedule navigation after state updates (to avoid race conditions)
-          if (location.pathname === '/auth') {
-            setTimeout(() => {
-              navigate('/dashboard');
-            }, 0);
+          // Show toast message for sign in - but don't navigate if we're already on a valid page
+          if (!window.location.hash.includes('access_token')) {
+            toast({
+              title: "Signed in successfully",
+              description: `Welcome${session?.user?.email ? ' ' + session.user.email : ''}!`
+            });
           }
         } else if (event === 'SIGNED_OUT') {
           console.log("User signed out");
@@ -139,7 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log("Cleaning up auth subscription");
       subscription.unsubscribe();
     };
-  }, [toast, navigate, location.pathname]);
+  }, [toast, navigate]);
 
   const signOut = async () => {
     console.log("Signing out");
