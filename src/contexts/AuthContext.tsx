@@ -3,7 +3,7 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 type AuthContextType = {
   session: Session | null;
@@ -30,8 +30,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
     console.log("Setting up auth state listener");
@@ -43,18 +41,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (event === 'SIGNED_IN' && session?.user) {
           console.log("User successfully signed in:", session.user.email);
-          
-          // Redirect to dashboard after successful sign-in
-          if (location.pathname === '/auth') {
-            navigate('/dashboard');
-          }
         } else if (event === 'SIGNED_OUT') {
           console.log("User signed out");
-          
-          // Redirect to landing page after sign-out
-          if (location.pathname !== '/') {
-            navigate('/');
-          }
         } else if (event === 'TOKEN_REFRESHED') {
           console.log("Auth token refreshed");
         } else if (event === 'USER_UPDATED') {
@@ -87,25 +75,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
-      
-      // If we have a session and we're on the auth page, redirect to dashboard
-      if (session && location.pathname === '/auth') {
-        navigate('/dashboard');
-      }
-      
-      // Check for hash fragment indicating auth redirect
-      const hash = window.location.hash;
-      if (hash && hash.includes('access_token') && session) {
-        // If we have a hash with access_token and we're authenticated, redirect to dashboard
-        navigate('/dashboard');
-      }
     });
 
     return () => {
       console.log("Cleaning up auth subscription");
       subscription.unsubscribe();
     };
-  }, [toast, navigate, location.pathname]);
+  }, [toast]);
 
   const signOut = async () => {
     console.log("Signing out");

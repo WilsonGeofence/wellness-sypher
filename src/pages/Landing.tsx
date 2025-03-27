@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -7,11 +6,9 @@ import {
   Sparkles,
   CheckCircle2
 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
 
 const Landing = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   // Function to scroll to the features section
   const scrollToFeatures = () => {
@@ -24,17 +21,6 @@ const Landing = () => {
   // Function to open AI Support section
   const goToAISupport = () => {
     scrollToFeatures();
-  };
-
-  // Function to handle the Get Started button click
-  const handleGetStarted = () => {
-    if (user) {
-      // If user is authenticated, redirect to dashboard
-      navigate('/dashboard');
-    } else {
-      // If not authenticated, redirect to auth page
-      navigate('/auth');
-    }
   };
 
   return (
@@ -56,31 +42,19 @@ const Landing = () => {
           </nav>
 
           <div className="flex items-center space-x-4">
-            {user ? (
-              <Button 
-                variant="ghost" 
-                className="text-gray-600 hover:text-gray-900"
-                onClick={() => navigate('/dashboard')}
-              >
-                Dashboard
-              </Button>
-            ) : (
-              <>
-                <Button 
-                  variant="ghost" 
-                  className="text-gray-600 hover:text-gray-900"
-                  onClick={() => navigate('/auth')}
-                >
-                  Sign In
-                </Button>
-                <Button 
-                  className="bg-sypher-blue-dark hover:bg-sypher-blue-accent text-white transition-colors"
-                  onClick={() => navigate('/auth')}
-                >
-                  Sign Up
-                </Button>
-              </>
-            )}
+            <Button 
+              variant="ghost" 
+              className="text-gray-600 hover:text-gray-900"
+              onClick={() => navigate('/auth')}
+            >
+              Sign In
+            </Button>
+            <Button 
+              className="bg-sypher-blue-dark hover:bg-sypher-blue-accent text-white transition-colors"
+              onClick={() => navigate('/auth')}
+            >
+              Sign Up
+            </Button>
           </div>
         </div>
       </header>
@@ -111,9 +85,9 @@ const Landing = () => {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button 
                 className="bg-sypher-blue-dark hover:bg-sypher-blue-accent text-white text-lg px-8 py-6 h-auto"
-                onClick={handleGetStarted}
+                onClick={() => navigate('/auth')}
               >
-                {user ? 'Go to Dashboard' : 'Get Started'} <ArrowRight className="ml-2 h-4 w-4" />
+                Get Started <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               <Button 
                 variant="outline" 
