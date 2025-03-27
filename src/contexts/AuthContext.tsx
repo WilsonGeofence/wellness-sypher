@@ -3,6 +3,7 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useSessionContext, useUser } from '@supabase/auth-helpers-react';
 
 type AuthContextType = {
   session: Session | null;
@@ -25,71 +26,61 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const { session, isLoading, error: sessionError } = useSessionContext();
+  const user = useUser();
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const [previousAuthEvent, setPreviousAuthEvent] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log("Setting up auth state listener");
+    console.log("AuthContext: Session state updated", { 
+      user: user?.email, 
+      sessionExists: !!session,
+      isLoading
+    });
     
-    let mounted = true;
-    
-    // Set up auth state listener FIRST - this is critical for proper auth handling
+    // Consider auth loaded when supabase has completed its initial check
+    if (!isLoading) {
+      setLoading(false);
+    }
+  }, [session, user, isLoading]);
+
+  // Set up auth state listener for UI feedback
+  useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         console.log("Auth state changed:", event, currentSession?.user?.email);
         
-        if (mounted) {
-          // Update state based on auth events
-          setSession(currentSession);
-          setUser(currentSession?.user ?? null);
+        // Only show toasts if this is not the initial loading
+        if (!isLoading && event !== previousAuthEvent) {
+          setPreviousAuthEvent(event);
           
-          // Only show toasts after initial loading is complete
-          if (!loading) {
-            if (event === 'SIGNED_IN') {
-              toast({
-                title: "Signed in successfully",
-                description: `Welcome${currentSession?.user?.email ? ' ' + currentSession.user.email : ''}!`
-              });
-            } else if (event === 'SIGNED_OUT') {
-              toast({
-                title: "Signed out",
-                description: "You have been signed out successfully"
-              });
-            }
+          if (event === 'SIGNED_IN') {
+            toast({
+              title: "Signed in successfully",
+              description: `Welcome${currentSession?.user?.email ? ' ' + currentSession.user.email : ''}!`
+            });
+          } else if (event === 'SIGNED_OUT') {
+            toast({
+              title: "Signed out",
+              description: "You have been signed out successfully"
+            });
           }
         }
       }
     );
 
-    // THEN check for existing session
-    const initializeAuth = async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        console.log("Initial session check:", data.session?.user?.email);
-        
-        if (mounted) {
-          setSession(data.session);
-          setUser(data.session?.user ?? null);
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error("Error getting session:", error);
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    initializeAuth();
-
     return () => {
-      console.log("Cleaning up auth subscription");
-      mounted = false;
       subscription.unsubscribe();
     };
-  }, [toast, loading]);
+  }, [toast, isLoading, previousAuthEvent]);
+
+  // Log session errors
+  useEffect(() => {
+    if (sessionError) {
+      console.error("Session error:", sessionError);
+    }
+  }, [sessionError]);
 
   const signOut = async () => {
     console.log("Signing out");
@@ -178,7 +169,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const value = {
     session,
     user,
-    loading,
+    loading: loading || isLoading,
     signOut,
     signUpWithEmail,
     signInWithEmail,

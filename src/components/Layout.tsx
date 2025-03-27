@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import Header from './navigation/Header';
@@ -24,8 +24,26 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       // We just need to clean up the URL to remove the hash fragment
       const cleanUrl = window.location.pathname;
       window.history.replaceState(null, '', cleanUrl);
+      
+      // Set a flag in session storage to indicate we're processing an OAuth flow
+      sessionStorage.setItem('processingOAuth', 'true');
+      
+      // Clear the flag after 3 seconds
+      setTimeout(() => {
+        sessionStorage.removeItem('processingOAuth');
+      }, 3000);
     }
   }, [location]);
+  
+  // Debug auth state in Layout
+  useEffect(() => {
+    console.log("Layout auth state:", { 
+      user: user?.email, 
+      sessionExists: !!session, 
+      loading,
+      pathname
+    });
+  }, [user, session, loading, pathname]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();

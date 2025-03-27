@@ -9,59 +9,72 @@ export const useRequireAuth = (redirectTo = '/auth') => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const [isCheckingToken, setIsCheckingToken] = useState(false);
+  const [isProcessingAuth, setIsProcessingAuth] = useState(false);
   
   useEffect(() => {
-    // Check if URL contains access_token (from OAuth redirects)
-    const hasAccessToken = location.hash && location.hash.includes('access_token');
+    // Check if we're on an OAuth callback route
+    const isOAuthCallback = location.pathname === '/dashboard' && 
+                            (location.hash.includes('access_token') || 
+                             sessionStorage.getItem('processingOAuth') === 'true');
     
-    if (hasAccessToken) {
-      console.log("Access token detected in URL, waiting for auth system to process");
-      setIsCheckingToken(true);
-      // Give sufficient time for Supabase auth to process the token (increased from 2s to 3s)
+    if (isOAuthCallback) {
+      console.log("OAuth callback detected, setting processing state");
+      sessionStorage.setItem('processingOAuth', 'true');
+      setIsProcessingAuth(true);
+      
+      // Give auth system time to process the token
       const tokenTimer = setTimeout(() => {
-        setIsCheckingToken(false);
+        console.log("OAuth processing complete");
+        sessionStorage.removeItem('processingOAuth');
+        setIsProcessingAuth(false);
       }, 3000);
+      
       return () => clearTimeout(tokenTimer);
     }
     
-    // Important: Don't redirect during loading or if checking token
-    if (loading || isCheckingToken) {
-      console.log("Auth state is loading or processing token, waiting...");
+    console.log("Auth check - Loading:", loading, "Processing:", isProcessingAuth, "User:", user?.email, "Session:", !!session);
+    
+    // Don't redirect if we're still loading or processing OAuth
+    if (loading || isProcessingAuth) {
+      console.log("Still loading or processing auth, waiting...");
       return;
     }
     
-    console.log("Auth check - User:", user?.email, "Session:", !!session);
-    
-    // Only redirect if not authenticated and not in the process of authenticating
+    // Only check auth after loading is complete
     if (!user && !session) {
       // Don't redirect if already on the auth page
       if (location.pathname === redirectTo) {
+        console.log("Already on auth page, not redirecting");
         return;
       }
       
       console.log("User not authenticated, redirecting to auth page");
       toast({
         title: "Authentication required",
-        description: "Please sign in to access this page.",
+        description: "Please sign in to access this page",
         variant: "destructive"
       });
       
+      // Save current path for redirect after login
       const currentPath = location.pathname;
       if (currentPath !== '/' && currentPath !== '/auth') {
         sessionStorage.setItem('authRedirectPath', currentPath);
+        console.log("Saved redirect path:", currentPath);
       }
       
       navigate(redirectTo);
     } else if (user && session) {
       console.log("User authenticated:", user.email);
+      
+      // Check if we need to redirect to a saved path
       const savedPath = sessionStorage.getItem('authRedirectPath');
       if (savedPath && location.pathname === '/auth') {
+        console.log("Redirecting to saved path:", savedPath);
         sessionStorage.removeItem('authRedirectPath');
         navigate(savedPath);
       }
     }
-  }, [user, session, loading, navigate, redirectTo, toast, location, isCheckingToken]);
+  }, [user, session, loading, isProcessingAuth, navigate, redirectTo, toast, location]);
   
-  return { user, loading: loading || isCheckingToken, session };
+  return { user, loading: loading || isProcessingAuth, session };
 };
