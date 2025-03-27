@@ -2,11 +2,13 @@
 import { useState, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 export const useSessionState = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     console.log("Setting up auth state listener");
@@ -26,10 +28,30 @@ export const useSessionState = () => {
         } else if (event === 'SIGNED_OUT') {
           console.log("User signed out");
           setLoading(false);
+          toast({
+            title: "Signed out",
+            description: "You have been signed out successfully."
+          });
         } else if (event === 'TOKEN_REFRESHED') {
           console.log("Auth token refreshed");
         } else if (event === 'USER_UPDATED') {
           console.log("User information updated");
+          toast({
+            title: "Profile updated",
+            description: "Your profile information has been updated."
+          });
+        } else if (event === 'PASSWORD_RECOVERY') {
+          console.log("Password recovery event detected");
+          toast({
+            title: "Password recovery",
+            description: "Please check your email to reset your password."
+          });
+        } else if (event === 'USER_DELETED') {
+          console.log("User account deleted");
+          toast({
+            title: "Account deleted",
+            description: "Your account has been deleted successfully."
+          });
         } else {
           setLoading(false);
         }
@@ -37,8 +59,18 @@ export const useSessionState = () => {
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
       console.log("Initial session check:", session?.user?.email);
+      
+      if (error) {
+        console.error("Error fetching session:", error);
+        toast({
+          title: "Authentication error",
+          description: "There was a problem retrieving your session. Please try signing in again.",
+          variant: "destructive"
+        });
+      }
+      
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -48,7 +80,7 @@ export const useSessionState = () => {
       console.log("Cleaning up auth subscription");
       subscription.unsubscribe();
     };
-  }, []);
+  }, [toast]);
 
   return { session, user, loading };
 };

@@ -13,6 +13,10 @@ export const useAuthMethods = () => {
     console.log("Signing out");
     try {
       await supabase.auth.signOut();
+      toast({
+        title: "Signed out successfully",
+        description: "You have been signed out."
+      });
       navigate('/auth');
     } catch (error: any) {
       console.error("Error signing out:", error);
@@ -47,10 +51,19 @@ export const useAuthMethods = () => {
           variant: "destructive"
         });
       } else if (result.data?.user) {
-        toast({
-          title: "Account created!",
-          description: "Please check your email to confirm your account."
-        });
+        if (result.data.user.identities?.length === 0) {
+          // User already exists
+          toast({
+            title: "Account already exists",
+            description: "This email is already registered. Please try signing in instead.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Account created!",
+            description: "Please check your email to confirm your account."
+          });
+        }
       }
       
       setLoading(false);
@@ -81,13 +94,31 @@ export const useAuthMethods = () => {
       
       if (result.error) {
         console.error("Sign in error:", result.error);
+        
+        let errorDescription = "Invalid email or password";
+        
+        // Provide more specific error messages based on error code
+        if (result.error.message.includes("Email not confirmed")) {
+          errorDescription = "Please check your email and confirm your account before signing in.";
+        } else if (result.error.message.includes("Invalid login credentials")) {
+          errorDescription = "The email or password you entered is incorrect.";
+        } else if (result.error.message.includes("rate limited")) {
+          errorDescription = "Too many sign-in attempts. Please try again later.";
+        } else if (result.error.message) {
+          errorDescription = result.error.message;
+        }
+        
         toast({
           title: "Sign in failed",
-          description: result.error.message || "Invalid email or password",
+          description: errorDescription,
           variant: "destructive"
         });
       } else {
-        // On successful sign in, navigate to dashboard
+        // On successful sign in, show success message and navigate to dashboard
+        toast({
+          title: "Signed in successfully",
+          description: `Welcome back${result.data?.user?.email ? ' ' + result.data.user.email : ''}!`
+        });
         navigate('/dashboard');
       }
       

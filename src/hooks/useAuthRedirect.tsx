@@ -38,6 +38,11 @@ export const useAuthRedirect = (loading: boolean) => {
           }
         } catch (error: any) {
           console.error("Failed to process authentication redirect:", error);
+          toast({
+            title: "Authentication error",
+            description: error.message || "An unexpected error occurred during authentication",
+            variant: "destructive"
+          });
         }
       }
     };
