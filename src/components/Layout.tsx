@@ -50,6 +50,17 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     navigate('/auth');
   };
 
+  // Don't show the header on the landing page
+  if (pathname === '/') {
+    return (
+      <div className="min-h-screen bg-white">
+        <main className="flex-1 relative z-0">
+          {children}
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-sypher-light">
       <Header pathname={pathname} user={user} handleSignOut={handleSignOut} />

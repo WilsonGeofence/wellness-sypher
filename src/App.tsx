@@ -16,6 +16,9 @@ import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
+// Remove App.css import since we're using Tailwind
+// import './App.css';
+
 const queryClient = new QueryClient();
 
 const App = () => (
