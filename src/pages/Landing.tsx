@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -340,7 +341,7 @@ const Landing = () => {
             <div className="relative flex justify-center items-center">
               <div className="relative w-64 h-auto">
                 <img 
-                  src="/lovable-uploads/d8e4fecd-adf9-495d-9d40-3b9fb82e5dc6.png" 
+                  src="/lovable-uploads/90a055ce-3398-4e55-af35-3f4e94a196f0.png" 
                   alt="Sypher mobile app" 
                   className="w-full h-auto rounded-3xl shadow-xl border-4 border-white/30"
                 />
