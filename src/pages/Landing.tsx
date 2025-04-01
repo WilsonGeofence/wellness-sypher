@@ -91,11 +91,11 @@ const Landing = () => {
             </div>
             
             <div className="relative">
-              <div className="rounded-full overflow-hidden shadow-2xl border-8 border-white">
+              <div className="rounded-xl overflow-hidden shadow-xl border-8 border-white">
                 <img 
-                  src="/lovable-uploads/864b36b0-de43-488e-83e6-feb1ca694e8b.png" 
-                  alt="Person working out with Sypher" 
-                  className="w-full object-cover aspect-square"
+                  src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158" 
+                  alt="Woman using Sypher health app" 
+                  className="w-full object-cover"
                 />
               </div>
             </div>
