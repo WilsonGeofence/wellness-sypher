@@ -8,13 +8,13 @@ const Logo: React.FC = () => {
   return (
     <div className="flex items-center space-x-2">
       <div 
-        className="w-10 h-10 rounded-full flex items-center justify-center cursor-pointer overflow-hidden"
+        className="w-10 h-10 rounded-full flex items-center justify-center cursor-pointer overflow-hidden bg-sypher-blue"
         onClick={() => navigate('/')}
       >
         <img
-          src="/lovable-uploads/71c2636b-ae76-4585-bdca-345e1b817c99.png"
+          src="/lovable-uploads/156167c3-2d69-4e37-9cfe-c30f2f95f3c7.png"
           alt="Sypher Logo"
-          className="w-full h-full object-cover"
+          className="w-8 h-8 object-contain"
         />
       </div>
       <h1 
