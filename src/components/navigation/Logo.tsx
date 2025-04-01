@@ -12,7 +12,7 @@ const Logo: React.FC = () => {
         onClick={() => navigate('/')}
       >
         <img
-          src="/lovable-uploads/156167c3-2d69-4e37-9cfe-c30f2f95f3c7.png"
+          src="/lovable-uploads/71c2636b-ae76-4585-bdca-345e1b817c99.png"
           alt="Sypher Logo"
           className="w-full h-full object-cover"
         />
